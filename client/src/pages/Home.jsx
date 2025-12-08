@@ -1,9 +1,89 @@
 // src/pages/Home.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const heroRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+  const statsRef = useRef([]);
+  const ctaRef = useRef(null);
+  const floatingIconsRef = useRef([]);
+  const featuresRef = useRef(null);
+
+  useEffect(() => {
+    // Hero animations on load
+    const ctx = gsap.context(() => {
+      // Title animation with split text effect
+      gsap.from(titleRef.current, {
+        opacity: 0,
+        y: 100,
+        duration: 1.2,
+        ease: "power4.out"
+      });
+
+      // Subtitle fade and slide
+      gsap.from(subtitleRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        delay: 0.3,
+        ease: "power3.out"
+      });
+
+      // Stats cards stagger animation
+      statsRef.current.forEach((stat, index) => {
+        gsap.from(stat, {
+          opacity: 0,
+          scale: 0.5,
+          duration: 0.8,
+          delay: 0.6 + index * 0.1,
+          ease: "back.out(1.7)"
+        });
+      });
+
+      // CTA buttons
+      gsap.from(ctaRef.current, {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        delay: 1,
+        ease: "power2.out"
+      });
+
+      // Features pills
+      gsap.from(featuresRef.current, {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        delay: 1.2,
+        ease: "power2.out"
+      });
+
+      // Floating icons continuous animation
+      floatingIconsRef.current.forEach((icon, index) => {
+        if (icon) {
+          gsap.to(icon, {
+            y: -20,
+            duration: 2 + index * 0.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "power1.inOut",
+            delay: index * 0.3
+          });
+        }
+      });
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const faqs = [
     {
@@ -26,33 +106,37 @@ export default function Home() {
 
   const services = [
     {
-      icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-      title: "Cardiology",
-      description: "Track heart health metrics, monitor cardiac patients, and manage cardiology department workflows efficiently.",
-      color: "from-pink-50 to-pink-100",
-      textColor: "text-pink-600"
-    },
-    {
       icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-      title: "Check Up",
-      description: "Regular health check-ups and preventive care tracking with automated reminders and screening schedules.",
+      title: "MDR Contact Tracing",
+      description: "Real-time tracking of Multi-Drug Resistant organism exposure and automated contact identification using RFID technology.",
       color: "from-[#0E8B86] to-[#28B99A]",
       textColor: "text-white",
-      featured: true
+      featured: true,
+      link: "/doctor/map"
     },
     {
-      icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4",
-      title: "Dental Care",
-      description: "Whether you need a routine checkup or specialized dental care, our team is here for you.",
-      color: "from-gray-50 to-gray-100",
-      textColor: "text-gray-600"
-    },
-    {
-      icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
-      title: "Optimal Health",
-      description: "Get insights into what might matter most to you with our optimal wellness assessments.",
+      icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+      title: "Patient Network Graph",
+      description: "Visualize contact networks and exposure chains to identify potential risk groups and transmission patterns.",
       color: "from-blue-50 to-blue-100",
-      textColor: "text-blue-600"
+      textColor: "text-blue-600",
+      link: "/doctor/network"
+    },
+    {
+      icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
+      title: "Real-Time Map",
+      description: "Live location tracking of patients and staff on hospital floor plans with instant exposure alerts.",
+      color: "from-purple-50 to-purple-100",
+      textColor: "text-purple-600",
+      link: "/doctor/map"
+    },
+    {
+      icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+      title: "MDR Checklist",
+      description: "Comprehensive screening protocols and infection control checklists for healthcare providers.",
+      color: "from-pink-50 to-pink-100",
+      textColor: "text-pink-600",
+      link: "/doctor/checklist"
     }
   ];
 
@@ -93,199 +177,271 @@ export default function Home() {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#about" className="text-gray-600 hover:text-[#0E8B86] transition">About</a>
+              <Link to="/about" className="text-gray-600 hover:text-[#0E8B86] transition">About</Link>
               <a href="#services" className="text-gray-600 hover:text-[#0E8B86] transition">Our Services</a>
               <a href="#doctors" className="text-gray-600 hover:text-[#0E8B86] transition">Doctor</a>
               <a href="#faq" className="text-gray-600 hover:text-[#0E8B86] transition">FAQ</a>
-              <Link to="/login" className="bg-gradient-to-r from-[#0E8B86] to-[#28B99A] text-white px-6 py-2 rounded-lg hover:shadow-lg transition">
-                Contact Us
+              <Link to="/login" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
+                Sign In
+              </Link>
+              <Link to="/signup" className="bg-gradient-to-r from-[#0E8B86] to-[#28B99A] text-white px-6 py-2 rounded-lg hover:shadow-lg transition">
+                Sign Up
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+            >
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 space-y-3">
+              <Link to="/about" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">About</Link>
+              <a href="#services" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">Our Services</a>
+              <a href="#doctors" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">Doctor</a>
+              <a href="#faq" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">FAQ</a>
+              <Link to="/login" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition font-medium">
+                Sign In
+              </Link>
+              <Link to="/signup" className="block px-4 py-2 bg-gradient-to-r from-[#0E8B86] to-[#28B99A] text-white text-center rounded-lg hover:shadow-lg transition">
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#0E8B86] to-[#28B99A] text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-5"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center space-x-2 bg-white bg-opacity-20 rounded-full px-4 py-2 mb-6">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">Reduce Healthcare Risks</span>
-              </div>
-              
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                Healthcare<br />
-                <span className="text-yellow-300">Monitoring</span>
+      {/* Animated Hero Section */}
+      <section 
+        ref={heroRef}
+        className="relative bg-gradient-to-br from-[#064e4a] via-[#0a6b66] to-[#064e4a] h-screen flex items-center justify-center overflow-hidden"
+      >
+        {/* Doctor Background Image with Overlay */}
+        <div className="absolute inset-0">
+          <img 
+            src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1920&h=1080&fit=crop"
+            alt="Healthcare Professional"
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#064e4a]/90 via-[#0a6b66]/85 to-[#064e4a]/90"></div>
+        </div>
+
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Gradient Orbs */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-[#28B99A] opacity-10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#FBBF24] opacity-15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s', animationDuration: '3s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white opacity-5 rounded-full blur-3xl"></div>
+          
+          {/* Animated Grid Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'linear-gradient(#FFFFFF 1px, transparent 1px), linear-gradient(90deg, #FFFFFF 1px, transparent 1px)',
+              backgroundSize: '50px 50px'
+            }}></div>
+          </div>
+          
+          {/* Medical Cross Icons Pattern */}
+          <div className="absolute top-10 left-1/4 opacity-10">
+            <i className="ri-add-line text-4xl text-white"></i>
+          </div>
+          <div className="absolute bottom-20 right-1/3 opacity-10">
+            <i className="ri-add-line text-5xl text-white"></i>
+          </div>
+          <div className="absolute top-1/3 right-10 opacity-10">
+            <i className="ri-add-line text-3xl text-white"></i>
+          </div>
+          
+          {/* Floating Medical Icons with GSAP Animation */}
+          <div 
+            ref={el => floatingIconsRef.current[0] = el}
+            className="absolute top-32 right-1/4 hidden xl:block"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-[#28B99A]/20 to-[#0E8B86]/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+              <i className="ri-stethoscope-line text-2xl text-[#FBBF24]"></i>
+            </div>
+          </div>
+          <div 
+            ref={el => floatingIconsRef.current[1] = el}
+            className="absolute bottom-32 left-1/4 hidden xl:block"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-[#28B99A]/20 to-[#0E8B86]/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+              <i className="ri-heart-pulse-line text-2xl text-[#FBBF24]"></i>
+            </div>
+          </div>
+          <div 
+            ref={el => floatingIconsRef.current[2] = el}
+            className="absolute top-1/2 right-16 hidden xl:block"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-[#28B99A]/20 to-[#0E8B86]/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+              <i className="ri-shield-cross-line text-2xl text-[#FBBF24]"></i>
+            </div>
+          </div>
+          <div 
+            ref={el => floatingIconsRef.current[3] = el}
+            className="absolute top-40 left-20 hidden xl:block"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-[#28B99A]/20 to-[#0E8B86]/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+              <i className="ri-microscope-line text-xl text-[#FBBF24]"></i>
+            </div>
+          </div>
+          <div 
+            ref={el => floatingIconsRef.current[4] = el}
+            className="absolute bottom-40 right-32 hidden xl:block"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-[#28B99A]/20 to-[#0E8B86]/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-xl">
+              <i className="ri-syringe-line text-xl text-[#FBBF24]"></i>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Container */}
+        <div className="container mx-auto px-4 relative z-10 max-w-7xl h-full flex items-center justify-center py-20">
+          <div className="max-w-5xl mx-auto text-center text-white w-full">
+            {/* Main Title with Gradient Text */}
+            <div ref={titleRef} className="mb-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-3 leading-none">
+                <span className="block bg-gradient-to-r from-white via-teal-100 to-white bg-clip-text text-transparent">Healthcare</span>
+                <span className="block bg-gradient-to-r from-[#FBBF24] via-[#FCD34D] to-[#FBBF24] bg-clip-text text-transparent drop-shadow-2xl">MedWatch</span>
               </h1>
-              
-              <div className="flex items-center space-x-8 mb-8">
-                <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm">Replace Healthcare</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm">No More Medications</span>
-                </div>
+              <div className="relative">
+                <div className="h-1.5 w-20 sm:w-24 md:w-28 bg-gradient-to-r from-transparent via-[#FBBF24] to-transparent mx-auto rounded-full"></div>
+                <div className="absolute inset-0 h-1.5 w-20 sm:w-24 md:w-28 bg-[#FBBF24] mx-auto rounded-full blur-sm"></div>
               </div>
-              
-              <p className="text-xl mb-8 text-teal-50">
-                WHETHER YOU'RE LOOKING FOR<br />
-                PREVENTIVE CARE, MANAGING A<br />
-                CHRONIC CONDITION.
+            </div>
+
+            {/* Subtitle with Enhanced Typography */}
+            <div ref={subtitleRef} className="mb-6">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-light mb-2 text-teal-50 tracking-wider">
+                TRACK MULTI-DRUG RESISTANT ORGANISMS
               </p>
-              
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-teal-100 flex items-center justify-center flex-wrap gap-2 sm:gap-3">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#FBBF24] rounded-full animate-pulse"></span>
+                  Real-Time Contact Tracing
+                </span>
+                <span className="hidden sm:inline text-teal-300">•</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5  bg-[#FBBF24] rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></span>
+                  Instant Alerts
+                </span>
+                <span className="hidden sm:inline text-teal-300">•</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#FBBF24] rounded-full animate-pulse" style={{animationDelay: '1s'}}></span>
+                  Advanced Analytics
+                </span>
+              </p>
+            </div>
+
+            {/* Enhanced Stats Grid with Hover Effects */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-6 max-w-4xl mx-auto">
+              <div 
+                ref={el => statsRef.current[0] = el}
+                className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 md:p-5 border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#FBBF24]/20 cursor-pointer"
+              >
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-br from-[#FBBF24] to-[#FCD34D] bg-clip-text text-transparent group-hover:scale-110 transition-transform">24/7</div>
+                <div className="text-xs sm:text-sm text-teal-100 group-hover:text-white transition-colors">Monitoring</div>
+              </div>
+              <div 
+                ref={el => statsRef.current[1] = el}
+                className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 md:p-5 border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#FBBF24]/20 cursor-pointer"
+              >
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-br from-[#FBBF24] to-[#FCD34D] bg-clip-text text-transparent group-hover:scale-110 transition-transform">100%</div>
+                <div className="text-xs sm:text-sm text-teal-100 group-hover:text-white transition-colors">Accuracy</div>
+              </div>
+              <div 
+                ref={el => statsRef.current[2] = el}
+                className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 md:p-5 border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#FBBF24]/20 cursor-pointer"
+              >
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-br from-[#FBBF24] to-[#FCD34D] bg-clip-text text-transparent group-hover:scale-110 transition-transform">&lt;1s</div>
+                <div className="text-xs sm:text-sm text-teal-100 group-hover:text-white transition-colors">Response</div>
+              </div>
+              <div 
+                ref={el => statsRef.current[3] = el}
+                className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 md:p-5 border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#FBBF24]/20 cursor-pointer"
+              >
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-br from-[#FBBF24] to-[#FCD34D] bg-clip-text text-transparent group-hover:scale-110 transition-transform">RFID</div>
+                <div className="text-xs sm:text-sm text-teal-100 group-hover:text-white transition-colors">Technology</div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div ref={ctaRef} className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+              <Link 
+                to="/login"
+                className="group relative px-5 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-gradient-to-r from-[#FBBF24] to-[#FCD34D] text-gray-900 rounded-full font-bold text-xs sm:text-sm md:text-base hover:from-[#FCD34D] hover:to-[#FBBF24] transition-all transform hover:scale-105 shadow-2xl hover:shadow-[#FBBF24]/50 flex items-center space-x-2 w-full sm:w-auto justify-center overflow-hidden"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></span>
+                <span className="relative z-10">Access Dashboard</span>
+                <i className="relative z-10 ri-arrow-right-line text-sm sm:text-base md:text-lg group-hover:translate-x-1 transition-transform"></i>
+              </Link>
               <Link 
                 to="/signup"
-                className="inline-flex items-center space-x-2 bg-yellow-400 text-gray-900 px-8 py-4 rounded-full font-bold hover:bg-yellow-300 transition transform hover:scale-105 shadow-xl"
+                className="group relative px-5 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 bg-white/10 backdrop-blur-lg text-white rounded-full font-bold text-xs sm:text-sm md:text-base border-2 border-white/30 hover:bg-white/20 hover:border-[#FBBF24]/50 transition-all transform hover:scale-105 shadow-xl w-full sm:w-auto text-center overflow-hidden"
               >
-                <span>Book Consultation</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <span className="absolute inset-0 bg-gradient-to-r from-[#FBBF24]/0 via-[#FBBF24]/20 to-[#FBBF24]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                <span className="relative z-10">Sign Up Free</span>
               </Link>
             </div>
-            
-            <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600&h=700&fit=crop" 
-                alt="Healthcare Professional"
-                className="rounded-3xl shadow-2xl"
-              />
+
+            {/* Features Pills */}
+            <div ref={featuresRef} className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 md:gap-3 px-2">
+              <div className="group flex items-center space-x-1.5 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 cursor-pointer">
+                <i className="ri-map-pin-line text-xs sm:text-sm md:text-base text-[#FBBF24] group-hover:scale-110 transition-transform"></i>
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium group-hover:text-white transition-colors">Live Tracking</span>
+              </div>
+              <div className="group flex items-center space-x-1.5 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 cursor-pointer">
+                <i className="ri-notification-badge-line text-xs sm:text-sm md:text-base text-[#FBBF24] group-hover:scale-110 transition-transform"></i>
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium group-hover:text-white transition-colors">Instant Alerts</span>
+              </div>
+              <div className="group flex items-center space-x-1.5 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 hover:border-[#FBBF24]/50 transition-all duration-300 hover:scale-105 cursor-pointer">
+                <i className="ri-line-chart-line text-xs sm:text-sm md:text-base text-[#FBBF24] group-hover:scale-110 transition-transform"></i>
+                <span className="text-[10px] sm:text-xs md:text-sm font-medium group-hover:text-white transition-colors">Analytics</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 hidden md:block">
+          <div className="flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-xs text-teal-200 tracking-wider">SCROLL DOWN</span>
+            <div className="w-5 h-8 border-2 border-white/50 rounded-full flex items-start justify-center p-1.5 hover:border-[#FBBF24] transition-colors cursor-pointer">
+              <div className="w-1 h-1.5 bg-[#FBBF24] rounded-full animate-pulse"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Service Cards */}
-      <section className="py-16 -mt-20 relative z-20">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Instant Video Consultation */}
-            <div className="bg-gradient-to-br from-pink-400 to-pink-500 rounded-3xl p-8 text-white relative overflow-hidden transform hover:scale-105 transition">
-              <div className="absolute right-0 bottom-0 opacity-10">
-                <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Instant Video</h3>
-              <h3 className="text-2xl font-bold mb-4">Consultation</h3>
-              <p className="text-pink-100 mb-6">Connect within 60 seconds</p>
-              <button className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-            </div>
+      
 
-            {/* Instant Video Consultation 2 */}
-            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 text-white relative overflow-hidden transform hover:scale-105 transition">
-              <div className="absolute right-0 bottom-0 opacity-10">
-                <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Instant Video</h3>
-              <h3 className="text-2xl font-bold mb-4">Consultation</h3>
-              <p className="text-orange-100 mb-6">Connect within 60 seconds</p>
-              <button className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Live Health Consultation */}
-            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-3xl p-8 text-white relative overflow-hidden transform hover:scale-105 transition">
-              <div className="absolute right-0 bottom-0 opacity-10">
-                <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Live Health</h3>
-              <h3 className="text-2xl font-bold mb-4">Consultation</h3>
-              <p className="text-blue-100 mb-6">Connect with top doctors</p>
-              <button className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-start">
-            <div>
-              <h2 className="text-4xl font-bold mb-4">Frequently</h2>
-              <h2 className="text-4xl font-bold mb-6">Ask Questions</h2>
-              <p className="text-gray-600 mb-8">
-                Find Answers to Common<br />
-                Questions About Our Services.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div 
-                  key={index}
-                  className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
-                  >
-                    <span className="font-semibold text-gray-800">{faq.question}</span>
-                    <svg 
-                      className={`w-5 h-5 text-[#0E8B86] transform transition ${openFaq === index ? 'rotate-180' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {openFaq === index && (
-                    <div className="px-6 pb-5 text-gray-600">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+     
 
       {/* Services Section */}
       <section id="services" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Services For Your Health</h2>
-            <p className="text-gray-600">Your Health, Our Priority – Access Trusted Services Anytime</p>
+            <h2 className="text-4xl font-bold mb-4">Services For MDR Contact Tracing</h2>
+            <p className="text-gray-600">Advanced Real-Time Monitoring – Track MDR Exposure Anytime</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, index) => (
-              <div 
+              <Link 
                 key={index}
-                className={`rounded-3xl p-8 ${service.featured ? 'bg-gradient-to-br ' + service.color : 'bg-gradient-to-br ' + service.color} transform hover:scale-105 transition shadow-lg`}
+                to={service.link || "/login"}
+                className={`rounded-3xl p-8 ${service.featured ? 'bg-gradient-to-br ' + service.color : 'bg-gradient-to-br ' + service.color} transform hover:scale-105 transition shadow-lg block`}
               >
                 <div className={`w-16 h-16 ${service.featured ? 'bg-white bg-opacity-20' : 'bg-white'} rounded-2xl flex items-center justify-center mb-6`}>
                   <svg className={`w-8 h-8 ${service.featured ? 'text-white' : service.textColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,10 +450,10 @@ export default function Home() {
                 </div>
                 <h3 className={`text-2xl font-bold mb-3 ${service.featured ? 'text-white' : 'text-gray-800'}`}>{service.title}</h3>
                 <p className={`mb-6 ${service.featured ? 'text-white text-opacity-90' : 'text-gray-600'}`}>{service.description}</p>
-                <button className={`font-semibold ${service.featured ? 'text-white' : service.textColor} hover:underline`}>
+                <span className={`font-semibold ${service.featured ? 'text-white' : service.textColor} hover:underline`}>
                   Explore Now →
-                </button>
-              </div>
+                </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -341,6 +497,49 @@ export default function Home() {
                     <span className="ml-2 text-gray-600">{doctor.rating}</span>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+       {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-gray-50">
+        <div className="container mx-auto px-6">
+          {/* Centered Title */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
+            <p className="text-gray-600 text-lg">
+              Find Answers to Common Questions About Our Services
+            </p>
+          </div>
+          
+          {/* FAQ Items */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            {faqs.map((faq, index) => (
+              <div 
+                key={index}
+                className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+                >
+                  <span className="font-semibold text-gray-800">{faq.question}</span>
+                  <svg 
+                    className={`w-5 h-5 text-[#0E8B86] transform transition ${openFaq === index ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {openFaq === index && (
+                  <div className="px-6 pb-5 text-gray-600">
+                    {faq.answer}
+                  </div>
+                )}
               </div>
             ))}
           </div>

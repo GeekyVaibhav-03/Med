@@ -16,22 +16,39 @@ export default function ProtectedRoute({ children, role = null }) {
 
   useEffect(() => {
     const check = async () => {
+      console.log('ProtectedRoute - Starting check, user:', user);
       setChecking(true);
       if (!user) {
+        console.log('ProtectedRoute - No user, calling refresh');
         await refresh();
+        console.log('ProtectedRoute - After refresh, user:', useAuthStore.getState().user);
       }
       setChecking(false);
+      console.log('ProtectedRoute - Check complete');
     };
     check();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading || checking) return <div className="p-6">Checking session…</div>;
+  if (loading || checking) {
+    console.log('ProtectedRoute - Loading or checking...');
+    return <div className="p-6">Checking session…</div>;
+  }
 
   const currentUser = useAuthStore.getState().user;
-  if (!currentUser) return <Navigate to="/login" state={{ requiredRole: role }} replace />;
+  console.log('ProtectedRoute - Current user:', currentUser);
+  console.log('ProtectedRoute - Required role:', role);
+  
+  if (!currentUser) {
+    console.log('ProtectedRoute - No current user, redirecting to login');
+    return <Navigate to="/login" state={{ requiredRole: role }} replace />;
+  }
 
-  if (role && currentUser.role !== role) return <Navigate to="/unauthorized" state={{ requiredRole: role }} replace />;
+  if (role && currentUser.role !== role) {
+    console.log('ProtectedRoute - Role mismatch. User role:', currentUser.role, 'Required:', role);
+    return <Navigate to="/unauthorized" state={{ requiredRole: role }} replace />;
+  }
 
+  console.log('ProtectedRoute - Rendering children');
   return children;
 }

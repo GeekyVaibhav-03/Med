@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Patient API</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .patient-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status-red { border-left: 5px solid #ef4444; }
+        .status-yellow { border-left: 5px solid #f59e0b; }
+        .status-green { border-left: 5px solid #10b981; }
+    </style>
+</head>
+<body>
+    <h1>🩺 Patient API Test</h1>
+    
+    <div>
+        <button onclick="loginAsDoctor()">1. Login as Doctor</button>
+        <button onclick="fetchPatients()">2. Fetch All Patients</button>
+        <button onclick="fetchPatientDetails()">3. Get Patient Details (P001)</button>
+        <button onclick="fetchPatientContacts()">4. Get Patient Contacts (P001)</button>
+    </div>
+
+    <div id="result">
+        <p>Click buttons to test API endpoints...</p>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('medwatch_token') || '';
+        
+        async function loginAsDoctor() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'doctor1',
+                        password: 'doctor123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('medwatch_token', token);
+                    localStorage.setItem('medwatch_user', JSON.stringify(data.user));
+                    document.getElementById('result').innerHTML = `
+                        <h3>✅ Login Successful</h3>
+                        <p><strong>User:</strong> ${data.user.username}</p>
+                        <p><strong>Role:</strong> ${data.user.role}</p>
+                        <p><strong>Hospital:</strong> ${data.user.hospital || 'N/A'}</p>
+                        <p><strong>Token:</strong> ${token.substring(0, 30)}...</p>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Login Failed</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function fetchPatients() {
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/patients', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.ok && data.patients) {
+                    let html = `
+                        <h3>✅ Fetched ${data.patients.length} Patients</h3>
+                        <div style="max-height: 500px; overflow-y: auto;">
+                    `;
+                    
+                    data.patients.forEach(p => {
+                        const statusClass = p.status === 'red' ? 'status-red' : 
+                                           p.status === 'yellow' ? 'status-yellow' : 
+                                           'status-green';
+                        html += `
+                            <div class="patient-card ${statusClass}">
+                                <strong>${p.name}</strong> (${p.uid}) - ${p.age} years, ${p.gender}
+                                <br>Status: ${p.status.toUpperCase()} | MDR: ${p.mdrStatus} | Risk: ${p.riskLevel}
+                                <br>Department: ${p.department || 'N/A'} | Admitted: ${new Date(p.admissionDate).toLocaleDateString()}
+                                ${p.notes ? `<br><em>${p.notes}</em>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    document.getElementById('result').innerHTML = html;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Failed to Fetch Patients</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function fetchPatientDetails() {
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/patients/P001', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.ok && data.patient) {
+                    const p = data.patient;
+                    document.getElementById('result').innerHTML = `
+                        <h3>✅ Patient Details: ${p.name}</h3>
+                        <div class="patient-card status-${p.status}">
+                            <p><strong>UID:</strong> ${p.uid}</p>
+                            <p><strong>Age:</strong> ${p.age} | <strong>Gender:</strong> ${p.gender} | <strong>Blood Group:</strong> ${p.bloodGroup}</p>
+                            <p><strong>Contact:</strong> ${p.contactNumber}</p>
+                            <p><strong>Emergency Contact:</strong> ${p.emergencyContact}</p>
+                            <p><strong>Address:</strong> ${p.address}</p>
+                            <p><strong>Risk Level:</strong> ${p.riskLevel} | <strong>Health Status:</strong> ${p.healthStatus}</p>
+                            <p><strong>MDR Status:</strong> ${p.mdrStatus}</p>
+                            <p><strong>Notes:</strong> ${p.notes}</p>
+                            
+                            ${p.mdrCase ? `
+                                <hr>
+                                <h4>🦠 MDR Case Details</h4>
+                                <p><strong>Organism:</strong> ${p.mdrCase.organism}</p>
+                                <p><strong>Severity:</strong> ${p.mdrCase.severity}</p>
+                                <p><strong>Status:</strong> ${p.mdrCase.status}</p>
+                                <p><strong>Detected:</strong> ${new Date(p.mdrCase.detectedAt).toLocaleDateString()}</p>
+                                <p><strong>Treatment:</strong> ${p.mdrCase.treatmentPlan}</p>
+                                <p><strong>Resistant to:</strong> ${p.mdrCase.antibioticsResistant.join(', ')}</p>
+                            ` : ''}
+                            
+                            <hr>
+                            <h4>📍 Recent Locations (${p.recentLocations.length})</h4>
+                            ${p.recentLocations.slice(0, 5).map(loc => `
+                                <div style="margin: 5px 0; padding: 5px; background: #eee;">
+                                    <strong>${loc.roomName}</strong> (${loc.roomType})
+                                    <br>Entry: ${new Date(loc.entryTime).toLocaleString()}
+                                    ${loc.exitTime ? `<br>Exit: ${new Date(loc.exitTime).toLocaleString()}` : ''}
+                                    <br>Duration: ${loc.duration} minutes
+                                </div>
+                            `).join('')}
+                            
+                            <p><strong>Total Contacts:</strong> ${p.contactCount}</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Failed to Fetch Patient</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function fetchPatientContacts() {
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/patients/P001/contacts', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.ok && data.network) {
+                    const net = data.network;
+                    document.getElementById('result').innerHTML = `
+                        <h3>✅ Contact Network for ${net.sourceName}</h3>
+                        <p><strong>Source UID:</strong> ${net.source}</p>
+                        <p><strong>Total Contacts:</strong> ${net.contactCount}</p>
+                        
+                        <h4>Nodes (${net.nodes.length})</h4>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            ${net.nodes.map(node => `
+                                <div class="patient-card">
+                                    <strong>${node.name}</strong> (${node.id})
+                                    <br>Type: ${node.type} | Profile: ${node.profile} | Risk: ${node.riskLevel}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <h4>Edges (${net.edges.length})</h4>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            ${net.edges.slice(0, 10).map(edge => `
+                                <div style="margin: 5px 0; padding: 5px; background: #f0f0f0;">
+                                    ${edge.from} ↔️ ${edge.to}
+                                    <br>Room: ${edge.room} | Duration: ${edge.duration} min | Type: ${edge.type}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>❌ Failed to Fetch Contacts</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        // Auto-load token if exists
+        if (token) {
+            document.getElementById('result').innerHTML = `
+                <p>✅ Token found in localStorage</p>
+                <p>You can directly test API endpoints</p>
+            `;
+        }
+    </script>
+</body>
+</html>

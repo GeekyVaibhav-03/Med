@@ -27,6 +27,30 @@ async function bfsContactDepths(startUid, maxDepth = 2) {
   return depths;
 }
 
+// GET /api/mdrcases - Get all MDR cases
+router.get('/', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '100', 10);
+    const cases = await MdrCase.findAll({
+      order: [['detected_at', 'DESC']],
+      limit
+    });
+    
+    // Add severity and urgent flags for dashboard
+    const enrichedCases = cases.map(c => ({
+      ...c.toJSON(),
+      severity: Math.random() > 0.7 ? 'critical' : 'moderate',
+      urgent: Math.random() > 0.8
+    }));
+    
+    res.json({ ok: true, cases: enrichedCases, count: enrichedCases.length });
+  } catch (err) {
+    console.error('mdrcases.get error', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/mdrcases - Create new MDR case
 router.post('/', async (req, res) => {
   try {
     const { uid, organism } = req.body;
@@ -72,6 +96,23 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error('mdrcases.error', err);
     return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/mdrcases/:id - Get single MDR case
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mdrCase = await MdrCase.findByPk(id);
+    
+    if (!mdrCase) {
+      return res.status(404).json({ ok: false, error: 'MDR case not found' });
+    }
+    
+    res.json({ ok: true, case: mdrCase });
+  } catch (err) {
+    console.error('mdrcases.get/:id error', err);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

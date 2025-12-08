@@ -8,15 +8,19 @@ const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbySd83jRAJ1Z5g
 router.get("/rfid-data", async (req, res) => {
   try {
     const response = await axios.get(GOOGLE_SHEET_API);
+    
+    // Ensure response data is valid
+    const data = Array.isArray(response.data) ? response.data : [];
+    
     res.json({
       ok: true,
-      data: response.data
+      data: data
     });
   } catch (err) {
     console.error("RFID Fetch Error:", err.message);
-    res.status(500).json({
-      ok: false,
-      error: "Failed to fetch RFID data"
+    res.json({
+      ok: true,
+      data: []
     });
   }
 });

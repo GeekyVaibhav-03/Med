@@ -28,7 +28,14 @@ const User = sequelize.define('User', {
     'nurse',
     'patient'), allowNull: false, field: 'role' },
   hospital: { type: DataTypes.STRING, allowNull: true, field: 'hospital' },
-  email: { type: DataTypes.STRING, allowNull: true, field: 'email' }
+  email: { type: DataTypes.STRING, allowNull: true, field: 'email' },
+  active: { type: DataTypes.BOOLEAN, defaultValue: true, field: 'active' },
+  isActive: { 
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.getDataValue('active');
+    }
+  }
 }, { tableName: 'users', timestamps: false });
 
 const RawEvent = sequelize.define('RawEvent', {
@@ -67,9 +74,13 @@ const MdrCase = sequelize.define('MdrCase', {
 
 const Alert = sequelize.define('Alert', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  type: { type: DataTypes.STRING },
+  type: { type: DataTypes.STRING, defaultValue: 'general' },
   message: { type: DataTypes.TEXT },
-  priority: { type: DataTypes.INTEGER, defaultValue: 1 }
+  priority: { type: DataTypes.INTEGER, defaultValue: 1 },
+  target_uid: { type: DataTypes.STRING, allowNull: true },
+  resolved: { type: DataTypes.BOOLEAN, defaultValue: false },
+  read: { type: DataTypes.BOOLEAN, defaultValue: false },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'alerts', timestamps: false });
 
 // ✅ NEW: LabReport model

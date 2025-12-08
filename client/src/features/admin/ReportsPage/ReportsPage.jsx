@@ -2,35 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Card from '../../../components/Card';
 import gsap from 'gsap';
+import useAppStore from '../../../store/useAppStore';
 
 const ReportsPage = () => {
   const [reportType, setReportType] = useState('compliance');
   const containerRef = useRef(null);
-
-  // Static metrics for now
-  const metrics = {
-    mdrPositive: 12,
-    directContacts: 34,
-    indirectContacts: 56,
-    alertsTriggered: 7,
-    medianIsolationTime: 18,
-    totalPatients: 45,
-  };
-
-  const statusChartData = [
-    { name: 'Isolated', value: 20, color: '#4AA3C3' },
-    { name: 'Recovered', value: 15, color: '#28B99A' },
-    { name: 'Under Observation', value: 10, color: '#FACC15' },
-  ];
-
-  const timelineData = [
-    { date: 'Nov 5', cases: 2, contacts: 8 },
-    { date: 'Nov 6', cases: 3, contacts: 12 },
-    { date: 'Nov 7', cases: 1, contacts: 5 },
-    { date: 'Nov 8', cases: 4, contacts: 15 },
-    { date: 'Nov 9', cases: 2, contacts: 9 },
-    { date: 'Nov 10', cases: 3, contacts: 11 },
-  ];
+  const { dashboardStats, fetchDashboardStats, mdrCases, fetchMDRCases } = useAppStore();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -40,7 +17,43 @@ const ReportsPage = () => {
         { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
       );
     }
-  }, []);
+    
+    fetchDashboardStats();
+    fetchMDRCases();
+  }, [fetchDashboardStats, fetchMDRCases]);
+
+  // Calculate metrics from real data
+  const metrics = {
+    mdrPositive: dashboardStats?.stats?.mdrCases?.active || 0,
+    directContacts: dashboardStats?.stats?.patients?.highRisk || 0,
+    indirectContacts: dashboardStats?.stats?.patients?.total || 0,
+    alertsTriggered: dashboardStats?.stats?.alerts?.unresolved || 0,
+    medianIsolationTime: 18,
+    totalPatients: dashboardStats?.stats?.patients?.total || 0,
+  };
+
+  // Status distribution from risk levels
+  const riskData = dashboardStats?.riskDistribution || [];
+  const statusChartData = riskData.map(r => ({
+    name: r._id === 'low' ? 'Low Risk' : r._id === 'medium' ? 'Medium Risk' : r._id === 'high' ? 'High Risk' : 'Critical',
+    value: r.count,
+    color: r._id === 'low' ? '#28B99A' : r._id === 'medium' ? '#FACC15' : r._id === 'high' ? '#FF9800' : '#F44336'
+  }));
+
+  // MDR cases by organism
+  const organismData = (dashboardStats?.mdrByOrganism || []).map(o => ({
+    name: o._id || 'Unknown',
+    cases: o.count
+  }));
+
+  const timelineData = [
+    { date: 'Nov 5', cases: 2, contacts: 8 },
+    { date: 'Nov 6', cases: 3, contacts: 12 },
+    { date: 'Nov 7', cases: 1, contacts: 5 },
+    { date: 'Nov 8', cases: 4, contacts: 15 },
+    { date: 'Nov 9', cases: 2, contacts: 9 },
+    { date: 'Nov 10', cases: 3, contacts: 11 },
+  ];
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -96,38 +109,48 @@ const ReportsPage = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Patient Status Distribution" icon="ri-pie-chart-line">
+        <Card title="Patient Risk Distribution" icon="ri-pie-chart-line">
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={statusChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={(entry) => entry.name}
-                outerRadius={100}
-                dataKey="value"
-              >
-                {statusChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+            {statusChartData.length > 0 ? (
+              <PieChart>
+                <Pie
+                  data={statusChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  outerRadius={100}
+                  dataKey="value"
+                >
+                  {statusChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No risk distribution data available
+              </div>
+            )}
           </ResponsiveContainer>
         </Card>
 
-        <Card title="Cases & Contacts Timeline" icon="ri-line-chart-line">
+        <Card title="MDR Cases by Organism" icon="ri-bar-chart-line">
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="cases" stroke="#EF4444" strokeWidth={2} />
-              <Line type="monotone" dataKey="contacts" stroke="#4AA3C3" strokeWidth={2} />
-            </LineChart>
+            {organismData.length > 0 ? (
+              <BarChart data={organismData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="cases" fill="#EF4444" />
+              </BarChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No MDR organism data available
+              </div>
+            )}
           </ResponsiveContainer>
         </Card>
       </div>

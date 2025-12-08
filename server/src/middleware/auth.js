@@ -1,7 +1,16 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
-
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_super_secret';
+
+// Try to load MongoDB User model, fallback to MySQL
+let User, isMongoUser = false;
+try {
+  const mongoModels = require('../models/mongodb');
+  User = mongoModels.User;
+  isMongoUser = true;
+} catch (err) {
+  const { User: MySQLUser } = require('../models');
+  User = MySQLUser;
+}
 
 /**
  * ✅ Verify token and attach req.user
@@ -22,14 +31,21 @@ async function requireAuth(req, res, next) {
       return res.status(401).json({ ok: false, error: 'Invalid token' });
     }
 
-    const user = await User.findByPk(payload.id);
+    // Find user from MongoDB or MySQL
+    let user;
+    if (isMongoUser) {
+      user = await User.findById(payload.id);
+    } else {
+      user = await User.findByPk(payload.id);
+    }
+
     if (!user) {
       return res.status(401).json({ ok: false, error: 'User not found' });
     }
 
     // Attach safe user object to request
     req.user = {
-      id: user.id,
+      id: user._id || user.id,
       username: user.username,
       role: user.role
     };
