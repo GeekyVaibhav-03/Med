@@ -7,9 +7,11 @@ try {
   const mongoModels = require('../models/mongodb');
   User = mongoModels.User;
   isMongoUser = true;
+  console.log('✅ Auth middleware: Using MongoDB');
 } catch (err) {
   const { User: MySQLUser } = require('../models');
   User = MySQLUser;
+  console.log('✅ Auth middleware: Using MySQL');
 }
 
 /**
@@ -29,6 +31,10 @@ async function requireAuth(req, res, next) {
       payload = jwt.verify(token, JWT_SECRET);
     } catch (e) {
       return res.status(401).json({ ok: false, error: 'Invalid token' });
+    }
+
+    if (!payload || !payload.id) {
+      return res.status(401).json({ ok: false, error: 'Invalid token payload' });
     }
 
     // Find user from MongoDB or MySQL

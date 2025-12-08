@@ -5,8 +5,14 @@ const cors = require('cors');
 const morgan = require('morgan');
 const http = require('http');
 
-const { sequelize } = require('./src/models'); // Sequelize instance
-const authRoutes = require('./src/routes/auth');
+// MongoDB Connection
+const connectMongoDB = require('./src/config/mongodb');
+
+// MySQL Sequelize
+const { sequelize } = require('./src/models');
+
+// Use MongoDB auth routes
+const authRoutes = require('./src/routes/auth-mongo');
 const ingestRoutes = require('./src/routes/ingest');
 const patientRoutes = require('./src/routes/patients');
 const contactRoutes = require('./src/routes/contacts');
@@ -25,7 +31,7 @@ const app = express();
 
 // --- Middlewares ---
 app.use(cors({
-  origin: "http://localhost:4000",  // ✅ EXACT frontend URL
+  origin: ["http://localhost:4000", "http://localhost:4001"],  // ✅ Allow both ports
   credentials: true,               // ✅ REQUIRED for login
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -50,7 +56,34 @@ app.use('/admin/users', requireAuth, requireRole('admin'), usersRouter);
 app.use("/api", rfidRoutes);
 
 // --- Health Check ---
-app.get('/', (req, res) => res.json({ ok: true, msg: 'MedWatch backend running' }));
+app.get('/', (req, res) => {
+  const mongoose = require('mongoose');
+  res.json({ 
+    ok: true, 
+    msg: 'MedWatch Hybrid Backend',
+    databases: {
+      mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      mysql: 'connected'
+    }
+  });
+});
+
+app.get('/health', async (req, res) => {
+  const mongoose = require('mongoose');
+  const health = {
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    mysql: 'unknown'
+  };
+  
+  try {
+    await sequelize.authenticate();
+    health.mysql = 'connected';
+  } catch (err) {
+    health.mysql = 'disconnected';
+  }
+  
+  res.json({ ok: true, ...health });
+});
 
 // --- HTTP + Socket ---
 const PORT = process.env.PORT || 5000;
@@ -60,10 +93,19 @@ app.locals.io = io;
 
 async function start() {
   try {
+    // Connect to MongoDB
+    await connectMongoDB();
+    
+    // Connect to MySQL
     await sequelize.authenticate();
-    console.log('DB connected');
-    await sequelize.sync(); // careful in prod: use migrations
-    server.listen(PORT, () => console.log('Server + Socket listening on', PORT));
+    await sequelize.sync();
+    console.log('✅ MySQL Connected');
+    
+    server.listen(PORT, () => {
+      console.log(`\n🚀 MedWatch Hybrid Server Running on Port ${PORT}`);
+      console.log(`📊 MongoDB + MySQL Databases Active`);
+      console.log(`🔌 Socket.IO: Ready\n`);
+    });
   } catch (err) {
     console.error(err);
     process.exit(1);

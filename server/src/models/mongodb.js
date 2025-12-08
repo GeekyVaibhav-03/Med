@@ -85,6 +85,33 @@ const userSchema = new mongoose.Schema({
   lockedUntil: Date
 }, { timestamps: true });
 
+// Patient Schema
+const patientSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  fatherHusbandName: { type: String, required: true },
+  gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+  age: { type: Number, required: true },
+  address: { type: String, required: true },
+  mobileNumber: { type: String, required: true },
+  aadharNumber: { type: String, required: true, unique: true },
+  admissionDate: { type: Date, default: Date.now },
+  status: { type: String, enum: ['active', 'discharged', 'critical'], default: 'active' },
+  mdrStatus: { type: String, enum: ['negative', 'positive', 'pending'], default: 'negative' },
+  hospital: { type: String, default: 'myhospital' },
+  ward: String,
+  bedNumber: String,
+  rfidTag: String,
+  mdrDetails: {
+    diagnosisDate: Date,
+    organism: String,
+    resistancePattern: String,
+    isolationRequired: { type: Boolean, default: false },
+    contactTracingInitiated: { type: Boolean, default: false },
+    treatmentStarted: Date,
+    notes: String
+  }
+}, { timestamps: true });
+
 // Person Schema (RFID tracked individuals)
 const personSchema = new mongoose.Schema({
   uid: { type: String, required: true, unique: true },
@@ -322,6 +349,7 @@ const Hospital = mongoose.model('Hospital', hospitalSchema);
 const Department = mongoose.model('Department', departmentSchema);
 const Room = mongoose.model('Room', roomSchema);
 const User = mongoose.model('User', userSchema);
+const Patient = mongoose.model('Patient', patientSchema);
 const Person = mongoose.model('Person', personSchema);
 const RawEvent = mongoose.model('RawEvent', rawEventSchema);
 const ContactEdge = mongoose.model('ContactEdge', contactEdgeSchema);
@@ -338,6 +366,7 @@ module.exports = {
   Department,
   Room,
   User,
+  Patient,
   Person,
   RawEvent,
   ContactEdge,

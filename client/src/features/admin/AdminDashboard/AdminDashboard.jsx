@@ -74,7 +74,27 @@ const AdminDashboard = () => {
     });
   }, [users, patients, alerts, mdrCases, rfidData]);
 
+  // Calculate MDR stats
+  const mdrPositiveCount = patients.filter(p => p.mdrStatus === 'positive').length;
+
   const quickActions = [
+    {
+      title: 'MDR Tracking',
+      description: 'Monitor MDR positive cases and contact tracing',
+      icon: 'ri-virus-line',
+      link: '/admin/mdr-tracking',
+      color: 'from-red-500 to-red-600',
+      badge: mdrPositiveCount,
+      urgent: mdrPositiveCount > 0
+    },
+    {
+      title: 'Patient Records',
+      description: 'View and manage all patient information',
+      icon: 'ri-user-heart-line',
+      link: '/admin/patients',
+      color: 'from-green-500 to-green-600',
+      badge: patients.length
+    },
     {
       title: 'User Management',
       description: 'Manage doctors, staff, and permissions',
@@ -377,6 +397,105 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Patients Section */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+            <i className="ri-user-heart-line text-white"></i>
+          </div>
+          Recent Patients
+        </h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Latest Patient Records</h3>
+            <Link
+              to="/admin/patients"
+              className="text-[#0E8B86] hover:text-[#28B99A] font-semibold flex items-center text-sm transition-colors"
+            >
+              View All <i className="ri-arrow-right-line ml-1"></i>
+            </Link>
+          </div>
+          {recentPatients.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Patient</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Gender</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Age</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ward/Bed</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {recentPatients.slice(0, 5).map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                            <i className="ri-user-line text-blue-600"></i>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-800 text-sm">{patient.fullName || patient.name}</div>
+                            <div className="text-xs text-gray-500">{patient.aadharNumber}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          {patient.gender === 'Male' ? (
+                            <i className="ri-men-line text-blue-600"></i>
+                          ) : (
+                            <i className="ri-women-line text-pink-600"></i>
+                          )}
+                          {patient.gender}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{patient.age}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <div className="font-mono text-xs">
+                          <div>{patient.ward}</div>
+                          <div className="text-gray-500">{patient.bedNumber}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {patient.mdrStatus === 'positive' || patient.mdrStatus === 'MDR+' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 flex items-center gap-1 w-fit">
+                            <i className="ri-alert-fill"></i>
+                            MDR+
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex items-center gap-1 w-fit">
+                            <i className="ri-checkbox-circle-fill"></i>
+                            Safe
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          to="/admin/patients"
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                        >
+                          <i className="ri-eye-line"></i>
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <i className="ri-user-heart-line text-5xl mb-3"></i>
+              <p className="text-lg">No patients found</p>
+              <p className="text-sm">Patient data will appear here once added</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
