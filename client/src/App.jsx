@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Unauthorized from './pages/Unauthorized';
+import About from './pages/About';
 
 function App() {
   return (
@@ -13,13 +14,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
 
-        {/* Public login page */}
+        {/* Public pages */}
         <Route path="/login" element={<Login />} />
-        
-        {/* Public signup page */}
         <Route path="/signup" element={<Signup />} />
-
-        {/* Unauthorized page */}
+        <Route path="/about" element={<About />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Protected admin and doctor routes */}
@@ -35,7 +33,7 @@ function App() {
         <Route
           path="/doctor/*"
           element={
-            <ProtectedRoute role="doctor">
+            <ProtectedRoute>
               <DoctorRoute />
             </ProtectedRoute>
           }

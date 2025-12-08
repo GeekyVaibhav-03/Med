@@ -29,6 +29,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showHospitalSelect, setShowHospitalSelect] = useState(false);
   const [tempUserData, setTempUserData] = useState(null);
+  const [roleTab, setRoleTab] = useState(requiredRole || 'doctor');
   const refresh = useAuthStore((s) => s.refresh);
 
 const submit = async (e) => {
@@ -43,32 +44,39 @@ const submit = async (e) => {
     });
 
     if (res.data?.user && res.data?.token) {
-      // Check if a specific role was required
-      if (requiredRole && res.data.user.role !== requiredRole) {
+      const userRole = res.data.user.role;
+      
+      // Check if user role matches the selected tab (admin tab accepts admin role)
+      if (roleTab === 'admin' && userRole !== 'admin') {
+        setErr(`Invalid credentials. This account is not an admin account.`);
+        setLoading(false);
+        return;
+      }
+      
+      if (roleTab === 'doctor' && userRole === 'admin') {
+        setErr(`Invalid credentials. Admin accounts must use the Admin/Hospital login tab.`);
+        setLoading(false);
+        return;
+      }
+
+      // Check if a specific role was required (from protected route)
+      if (requiredRole && userRole !== requiredRole) {
         setErr(`Access denied. ${requiredRole} role required.`);
         setLoading(false);
         return;
       }
 
-      // If admin, show hospital selection
-      if (res.data.user.role === 'admin') {
-        setTempUserData({ user: res.data.user, token: res.data.token });
-        setShowHospitalSelect(true);
-        setLoading(false);
-        return;
-      }
-
-      // For non-admin, login directly and redirect based on role
+      // Store session immediately
       useAuthStore.getState().setSession({
         user: res.data.user,
         token: res.data.token
       });
-      
+
       // Redirect based on user role
-      if (res.data.user.role === 'doctor') {
-        window.location.href = '/doctor';
-      } else if (res.data.user.role === 'admin') {
+      if (userRole === 'admin') {
         window.location.href = '/admin';
+      } else if (userRole === 'doctor' || userRole === 'nurse' || userRole === 'pharmacist') {
+        window.location.href = '/doctor';
       } else {
         window.location.href = '/doctor'; // default fallback
       }
@@ -84,24 +92,13 @@ const submit = async (e) => {
 
 const handleHospitalSubmit = (e) => {
   e.preventDefault();
-  if (!hospital) {
-    setErr('Please select a hospital');
-    return;
-  }
-
+  setErr('');
+  
+  // Hospital selection is optional, proceed anyway
   setLoading(true);
 
-  // Store session with hospital info
-  const userWithHospital = { ...tempUserData.user, hospital };
-  useAuthStore.getState().setSession({
-    user: userWithHospital,
-    token: tempUserData.token
-  });
-  
-  // Always redirect to admin panel after hospital selection
-  setTimeout(() => {
-    window.location.href = '/admin';
-  }, 100);
+  // Redirect immediately (hospital already stored if selected)
+  window.location.href = '/admin';
 };
 
 
@@ -177,6 +174,42 @@ const handleHospitalSubmit = (e) => {
             <h2 className="text-2xl font-bold text-gray-900">MedWatch</h2>
           </div>
 
+          {/* Role Selection Tabs */}
+          {!showHospitalSelect && (
+            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => setRoleTab('doctor')}
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition ${
+                  roleTab === 'doctor'
+                    ? 'bg-white text-[#0E8B86] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Doctor</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setRoleTab('admin')}
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition ${
+                  roleTab === 'admin'
+                    ? 'bg-white text-[#0E8B86] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span>Admin/Hospital</span>
+                </div>
+              </button>
+            </div>
+          )}
+
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               {showHospitalSelect ? 'Select Hospital' : 'Sign In'}
@@ -184,7 +217,7 @@ const handleHospitalSubmit = (e) => {
             <p className="text-gray-600">
               {showHospitalSelect 
                 ? 'Choose your hospital to access the admin panel' 
-                : 'Enter your credentials to access your account'}
+                : `Sign in as ${roleTab === 'doctor' ? 'Doctor' : 'Hospital Administrator'} to access your dashboard`}
             </p>
             {requiredRole && !showHospitalSelect && (
               <div className="mt-3 inline-flex items-center px-3 py-1 bg-teal-50 border border-[#0E8B86] text-[#0E8B86] rounded-lg text-sm font-medium">

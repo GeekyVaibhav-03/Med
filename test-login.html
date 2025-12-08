@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Backend Test</h1>
+    <div id="result"></div>
+
+    <script>
+        // Test admin login
+        fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                username: 'admin1',
+                password: 'admin123'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            console.log('Login response:', data);
+            
+            if (data.ok && data.token) {
+                // Test accessing admin endpoint
+                return fetch('http://localhost:5000/api/admin/users', {
+                    headers: {
+                        'Authorization': 'Bearer ' + data.token
+                    }
+                })
+                .then(res => res.json())
+                .then(userData => {
+                    document.getElementById('result').innerHTML += '<h2>Users:</h2><pre>' + JSON.stringify(userData, null, 2) + '</pre>';
+                });
+            }
+        })
+        .catch(err => {
+            document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
+            console.error('Error:', err);
+        });
+    </script>
+</body>
+</html>

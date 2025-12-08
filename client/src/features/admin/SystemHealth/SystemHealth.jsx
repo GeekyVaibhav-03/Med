@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import Card from '../../../components/Card';
 import gsap from 'gsap';
+import api from '../../../services/api';
+import useAppStore from '../../../store/useAppStore';
 
 const SystemHealth = () => {
   const containerRef = useRef(null);
-
-  // Static system health data
-  const systemHealth = {
+  const { dashboardStats, fetchDashboardStats } = useAppStore();
+  const [systemHealth, setSystemHealth] = useState({
     lastSync: new Date(),
-  };
+    mongodb: 'connected',
+    mysql: 'disconnected'
+  });
 
   const [integrations, setIntegrations] = useState([
     { name: 'EMR System', status: 'Connected', icon: 'ri-hospital-line', color: 'green' },
@@ -27,6 +30,22 @@ const SystemHealth = () => {
       );
     }
 
+    // Fetch dashboard stats and system health
+    fetchDashboardStats();
+    
+    api.get('/dashboard/health').then(res => {
+      if (res.data.ok) {
+        setSystemHealth({
+          lastSync: res.data.health?.lastSync ? new Date(res.data.health.lastSync) : new Date(),
+          mongodb: res.data.health?.mongodb || 'unknown',
+          mysql: res.data.health?.mysql || 'unknown'
+        });
+      }
+    }).catch(err => {
+      console.error('Failed to fetch system health:', err);
+      // Keep default values on error
+    });
+
     // Simulate status check
     setTimeout(() => {
       setIntegrations((prev) =>
@@ -37,7 +56,7 @@ const SystemHealth = () => {
         )
       );
     }, 2000);
-  }, []);
+  }, [fetchDashboardStats]);
 
   const statusColors = {
     green: 'bg-green-500',
@@ -58,7 +77,9 @@ const SystemHealth = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm opacity-90">System Status</p>
-              <h3 className="text-3xl font-bold mt-2">Healthy</h3>
+              <h3 className="text-3xl font-bold mt-2">
+                {systemHealth?.database?.mongodb === 'connected' ? 'Healthy' : 'Degraded'}
+              </h3>
             </div>
             <i className="ri-heart-pulse-line text-5xl opacity-50"></i>
           </div>
@@ -67,10 +88,12 @@ const SystemHealth = () => {
         <Card className="bg-gradient-to-br from-cta-green to-green-600 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-90">Uptime</p>
-              <h3 className="text-3xl font-bold mt-2">99.8%</h3>
+              <p className="text-sm opacity-90">Total Users</p>
+              <h3 className="text-3xl font-bold mt-2">
+                {dashboardStats?.stats?.users?.total || 0}
+              </h3>
             </div>
-            <i className="ri-time-line text-5xl opacity-50"></i>
+            <i className="ri-user-line text-5xl opacity-50"></i>
           </div>
         </Card>
 
@@ -78,12 +101,47 @@ const SystemHealth = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm opacity-90">Active Users</p>
-              <h3 className="text-3xl font-bold mt-2">47</h3>
+              <h3 className="text-3xl font-bold mt-2">
+                {dashboardStats?.stats?.users?.active || 0}
+              </h3>
             </div>
-            <i className="ri-user-line text-5xl opacity-50"></i>
+            <i className="ri-user-check-line text-5xl opacity-50"></i>
           </div>
         </Card>
       </div>
+
+      {/* Database Stats */}
+      {systemHealth && (
+        <Card title="Database Statistics" icon="ri-database-2-line">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center p-4 bg-light-teal rounded-lg">
+              <i className="ri-user-line text-3xl text-primary-teal mb-2"></i>
+              <p className="text-2xl font-bold text-dark-text">{systemHealth.collections.users}</p>
+              <p className="text-sm text-gray-600">Users</p>
+            </div>
+            <div className="text-center p-4 bg-light-teal rounded-lg">
+              <i className="ri-user-heart-line text-3xl text-primary-teal mb-2"></i>
+              <p className="text-2xl font-bold text-dark-text">{systemHealth.collections.persons}</p>
+              <p className="text-sm text-gray-600">Persons</p>
+            </div>
+            <div className="text-center p-4 bg-light-teal rounded-lg">
+              <i className="ri-virus-line text-3xl text-red-500 mb-2"></i>
+              <p className="text-2xl font-bold text-dark-text">{systemHealth.collections.mdrCases}</p>
+              <p className="text-sm text-gray-600">MDR Cases</p>
+            </div>
+            <div className="text-center p-4 bg-light-teal rounded-lg">
+              <i className="ri-alarm-warning-line text-3xl text-yellow-500 mb-2"></i>
+              <p className="text-2xl font-bold text-dark-text">{systemHealth.collections.alerts}</p>
+              <p className="text-sm text-gray-600">Alerts</p>
+            </div>
+            <div className="text-center p-4 bg-light-teal rounded-lg">
+              <i className="ri-sensor-line text-3xl text-accent-blue mb-2"></i>
+              <p className="text-2xl font-bold text-dark-text">{systemHealth.collections.rawEvents}</p>
+              <p className="text-sm text-gray-600">RFID Events</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Integration Status */}
       <Card title="Integration Status" icon="ri-plug-line">
@@ -114,7 +172,9 @@ const SystemHealth = () => {
           <div className="flex items-center justify-between p-4 bg-light-teal rounded-lg">
             <div>
               <p className="font-medium text-dark-text">Last EMR Sync</p>
-              <p className="text-sm text-gray-600">{systemHealth.lastSync.toLocaleString()}</p>
+              <p className="text-sm text-gray-600">
+                {systemHealth?.lastSync ? new Date(systemHealth.lastSync).toLocaleString() : 'Never'}
+              </p>
             </div>
             <button className="bg-primary-teal text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition">
               <i className="ri-refresh-line mr-2"></i>

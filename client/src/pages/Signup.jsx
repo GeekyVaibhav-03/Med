@@ -25,7 +25,9 @@ export default function Signup() {
     confirmPassword: '',
     role: 'doctor',
     hospital: '',
-    email: ''
+    email: '',
+    fullName: '',
+    phone: ''
   });
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,9 @@ export default function Signup() {
         password: formData.password,
         role: formData.role,
         hospital: formData.hospital,
-        email: formData.email
+        email: formData.email,
+        fullName: formData.fullName,
+        phone: formData.phone
       });
 
       if (res.data?.ok) {
@@ -87,10 +91,11 @@ export default function Signup() {
             token: loginRes.data.token
           });
 
+          // Redirect based on role
           if (loginRes.data.user.role === 'admin') {
             window.location.href = '/admin';
           } else {
-            window.location.href = '/doctor';
+            window.location.href = '/doctor'; // doctor, nurse, pharmacist, visitor
           }
         } else {
           setErr('Account created! Please login.');
@@ -181,7 +186,65 @@ export default function Signup() {
 
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-            <p className="text-gray-600">Fill in your details to register</p>
+            <p className="text-gray-600">
+              Register to access MedWatch contact tracing and MDR tracking system
+            </p>
+          </div>
+
+          {/* Role Selection Tabs */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              I am a <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'doctor' })}
+                className={`py-3 px-4 rounded-xl font-semibold transition border-2 ${
+                  formData.role === 'doctor'
+                    ? 'bg-[#0E8B86] text-white border-[#0E8B86]'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#0E8B86]'
+                }`}
+              >
+                Doctor
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'nurse' })}
+                className={`py-3 px-4 rounded-xl font-semibold transition border-2 ${
+                  formData.role === 'nurse'
+                    ? 'bg-[#0E8B86] text-white border-[#0E8B86]'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#0E8B86]'
+                }`}
+              >
+                Nurse
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'pharmacist' })}
+                className={`py-3 px-4 rounded-xl font-semibold transition border-2 ${
+                  formData.role === 'pharmacist'
+                    ? 'bg-[#0E8B86] text-white border-[#0E8B86]'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#0E8B86]'
+                }`}
+              >
+                Pharmacist
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'visitor' })}
+                className={`py-3 px-4 rounded-xl font-semibold transition border-2 ${
+                  formData.role === 'visitor'
+                    ? 'bg-[#0E8B86] text-white border-[#0E8B86]'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#0E8B86]'
+                }`}
+              >
+                Visitor
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Note: Admin accounts must be created by existing administrators.
+            </p>
           </div>
 
           {/* Error Alert */}
@@ -197,43 +260,6 @@ export default function Signup() {
           )}
 
           <form onSubmit={submit} className="space-y-4">
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Register as <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'doctor' })}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    formData.role === 'doctor'
-                      ? 'border-[#0E8B86] bg-teal-50 shadow-md scale-105'
-                      : 'border-gray-300 hover:border-teal-300 hover:shadow-sm'
-                  }`}
-                >
-                  <div className={`font-bold text-base mb-1 ${
-                    formData.role === 'doctor' ? 'text-[#0E8B86]' : 'text-gray-700'
-                  }`}>Doctor</div>
-                  <div className="text-xs text-gray-600">Medical Staff</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'admin' })}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    formData.role === 'admin'
-                      ? 'border-[#0E8B86] bg-teal-50 shadow-md scale-105'
-                      : 'border-gray-300 hover:border-teal-300 hover:shadow-sm'
-                  }`}
-                >
-                  <div className={`font-bold text-base mb-1 ${
-                    formData.role === 'admin' ? 'text-[#0E8B86]' : 'text-gray-700'
-                  }`}>Admin</div>
-                  <div className="text-xs text-gray-600">Hospital Admin</div>
-                </button>
-              </div>
-            </div>
-
             {/* Hospital Selection */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -290,6 +316,28 @@ export default function Signup() {
               </div>
             </div>
 
+            {/* Full Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Full Name <span className="text-gray-400 text-xs font-normal">(optional)</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Dr. John Doe"
+                  className="w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0E8B86] focus:border-transparent transition duration-200 outline-none"
+                />
+              </div>
+            </div>
+
             {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -307,6 +355,28 @@ export default function Signup() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="your.email@example.com"
+                  className="w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0E8B86] focus:border-transparent transition duration-200 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number <span className="text-gray-400 text-xs font-normal">(optional)</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+91 98765 43210"
                   className="w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0E8B86] focus:border-transparent transition duration-200 outline-none"
                 />
               </div>

@@ -11,6 +11,7 @@ const UsersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const containerRef = useRef(null);
 
@@ -77,12 +78,28 @@ const UsersPage = () => {
     exportToCSV(users, 'users_export.csv');
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
+  const getRoleBadgeColor = (role) => {
+    const colors = {
+      admin: 'bg-purple-100 text-purple-800 border-purple-200',
+      doctor: 'bg-blue-100 text-blue-800 border-blue-200',
+      nurse: 'bg-green-100 text-green-800 border-green-200',
+      pharmacist: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      visitor: 'bg-gray-100 text-gray-800 border-gray-200',
+      patient: 'bg-pink-100 text-pink-800 border-pink-200'
+    };
+    return colors[role] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = 
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (user.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      user.role.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -108,15 +125,39 @@ const UsersPage = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <Card title="Search Users" icon="ri-search-line">
-        <input
-          type="text"
-          placeholder="Search by username, email, or role..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-teal"
-        />
+      {/* Search & Filter */}
+      <Card title="Search & Filter Users" icon="ri-filter-3-line">
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Search by username, email, or role..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-teal"
+          />
+          
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">Filter by Role:</label>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-teal"
+            >
+              <option value="all">All Roles ({users.length})</option>
+              <option value="admin">Admin Only</option>
+              <option value="doctor">Doctors Only</option>
+              <option value="nurse">Nurses Only</option>
+              <option value="pharmacist">Pharmacists Only</option>
+              <option value="visitor">Visitors Only</option>
+            </select>
+          </div>
+          
+          <div className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-primary-teal">{filteredUsers.length}</span> of{' '}
+            <span className="font-semibold">{users.length}</span> users
+            {roleFilter !== 'all' && <span className="ml-2 text-primary-teal">• {roleFilter}s</span>}
+          </div>
+        </div>
       </Card>
 
       {/* Users Table */}
@@ -135,9 +176,13 @@ const UsersPage = () => {
             <tbody className="divide-y divide-gray-200">
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-light-teal transition">
-                  <td className="px-6 py-4">{user.username}</td>
-                  <td className="px-6 py-4 text-gray-600">{user.email}</td>
-                  <td className="px-6 py-4">{user.role}</td>
+                  <td className="px-6 py-4 font-medium">{user.username}</td>
+                  <td className="px-6 py-4 text-gray-600">{user.email || '-'}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(user.role)}`}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     {user.active ? (
                       <span className="text-cta-green flex items-center gap-1">
