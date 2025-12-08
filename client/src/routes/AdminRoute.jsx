@@ -6,8 +6,11 @@ import UsersPage from '../features/admin/UsersPage/UsersPage';
 import AlertsConfig from '../features/admin/AlertsConfig/AlertsConfig';
 import ReportsPage from '../features/admin/ReportsPage/ReportsPage';
 import SystemHealth from '../features/admin/SystemHealth/SystemHealth';
+import LabReportUpload from '../features/admin/LabReportUpload/LabReportUpload'; // ✅ NEW
+import MDRAlertBanner from '../components/MDRAlertBanner'; // ✅ NEW
 
 const adminMenuItems = [
+  { path: '/lab-upload', label: 'Lab Report Upload', icon: 'ri-test-tube-2-line' }, // ✅ NEW
   { path: '/map-editor', label: 'Map Configuration', icon: 'ri-map-2-line' },
   { path: '/users', label: 'User Management', icon: 'ri-team-line' },
   { path: '/alerts', label: 'Alert Configuration', icon: 'ri-notification-3-line' },
@@ -19,11 +22,13 @@ const AdminRoute = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header title="Admin Panel - MDR Contact Tracing" />
+      <MDRAlertBanner /> {/* ✅ NEW: Real-time alert banner */}
       <div className="flex h-[calc(100vh-80px)]">
         <Sidebar items={adminMenuItems} type="admin" />
         <main className="flex-1 p-6 overflow-auto">
           <Routes>
-            <Route path="/" element={<Navigate to="/admin/map-editor" replace />} />
+            <Route path="/" element={<Navigate to="/admin/lab-upload" replace />} />
+            <Route path="/lab-upload" element={<LabReportUpload />} /> {/* ✅ NEW */}
             <Route path="/map-editor" element={<MapEditor />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/alerts" element={<AlertsConfig />} />

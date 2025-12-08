@@ -1,16 +1,16 @@
 const { Sequelize, DataTypes, Op } = require('sequelize');
+const path = require('path');
 
 require('dotenv').config();
-const MYSQL_URI = process.env.MYSQL_URI || 'mysql://medwatch:Vaibhav%4003@127.0.0.1:3306/medwatch';
 
-
-// Create Sequelize instance BEFORE defining models
-const sequelize = new Sequelize(MYSQL_URI, {
+// Use SQLite instead of MySQL - no setup needed!
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: path.join(__dirname, '../../medwatch.db'),
   logging: false,
   define: {
     timestamps: false   // <<--- DISABLE global timestamps (createdAt/updatedAt)
-  },
-  dialectOptions: {}
+  }
 });
 
 // Define models after sequelize is created
@@ -72,6 +72,36 @@ const Alert = sequelize.define('Alert', {
   priority: { type: DataTypes.INTEGER, defaultValue: 1 }
 }, { tableName: 'alerts', timestamps: false });
 
+// ✅ NEW: LabReport model
+const LabReport = sequelize.define('LabReport', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  patient_uid: { type: DataTypes.STRING, allowNull: false, field: 'patient_uid' },
+  patient_name: { type: DataTypes.STRING, allowNull: true, field: 'patient_name' },
+  report_date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, field: 'report_date' },
+  specimen_type: { type: DataTypes.STRING, allowNull: true, field: 'specimen_type' },
+  organism: { type: DataTypes.STRING, allowNull: true, field: 'organism' },
+  is_mdr: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_mdr' },
+  antibiotic_profile: { type: DataTypes.JSON, allowNull: true, field: 'antibiotic_profile' },
+  doctor_name: { type: DataTypes.STRING, allowNull: true, field: 'doctor_name' },
+  hospital: { type: DataTypes.STRING, allowNull: true, field: 'hospital' },
+  status: { type: DataTypes.ENUM('pending', 'processed', 'flagged'), defaultValue: 'pending', field: 'status' },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, field: 'created_at' }
+}, { tableName: 'lab_reports', timestamps: false });
+
+// ✅ NEW: Notification model for real-time alerts
+const Notification = sequelize.define('Notification', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  lab_report_id: { type: DataTypes.INTEGER, allowNull: true, field: 'lab_report_id' },
+  mdr_case_id: { type: DataTypes.INTEGER, allowNull: true, field: 'mdr_case_id' },
+  recipient_role: { type: DataTypes.STRING, allowNull: false, field: 'recipient_role' }, // 'doctor', 'infection_control', 'admin'
+  recipient_hospital: { type: DataTypes.STRING, allowNull: true, field: 'recipient_hospital' },
+  title: { type: DataTypes.STRING, allowNull: false, field: 'title' },
+  message: { type: DataTypes.TEXT, allowNull: false, field: 'message' },
+  severity: { type: DataTypes.ENUM('low', 'medium', 'high', 'critical'), defaultValue: 'medium', field: 'severity' },
+  is_read: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_read' },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, field: 'created_at' }
+}, { tableName: 'notifications', timestamps: false });
+
 // Export everything
 module.exports = {
   sequelize,
@@ -82,5 +112,7 @@ module.exports = {
   Person,
   ContactEdge,
   MdrCase,
-  Alert
+  Alert,
+  LabReport,
+  Notification
 };

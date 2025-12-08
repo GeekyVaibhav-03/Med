@@ -13,6 +13,8 @@ const contactRoutes = require('./src/routes/contacts');
 const alertRoutes = require('./src/routes/alerts');
 const mapRoutes = require('./src/routes/map');
 const mdrRoutes = require('./src/routes/mdrcases');
+const labReportsRoutes = require('./src/routes/labreports'); // ✅ NEW
+const notificationsRoutes = require('./src/routes/notifications'); // ✅ NEW
 const { requireAuth, requireRole } = require('./src/middleware/auth');
 const rfidRoutes = require("./src/routes/rfid");
 const usersRouter = require('./src/routes/users'); // fixed path
@@ -39,6 +41,8 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/mdrcases', requireAuth, requireRole('admin', 'doctor'), mdrRoutes);
+app.use('/api/labreports', requireAuth, labReportsRoutes); // ✅ NEW
+app.use('/api/notifications', requireAuth, notificationsRoutes); // ✅ NEW
 
 // Admin-only user management
 app.use('/api/admin/users', requireAuth, requireRole('admin'), usersRouter);

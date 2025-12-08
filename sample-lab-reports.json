@@ -1,0 +1,64 @@
+[
+  {
+    "patient_uid": "P001",
+    "patient_name": "John Doe",
+    "specimen_type": "Blood",
+    "organism": "Staphylococcus aureus",
+    "antibiotic_profile": {
+      "Ampicillin": "R",
+      "Amoxicillin": "R",
+      "Penicillin": "R",
+      "Ciprofloxacin": "R",
+      "Gentamicin": "R",
+      "Erythromycin": "R"
+    }
+  },
+  {
+    "patient_uid": "P002",
+    "patient_name": "Jane Smith",
+    "specimen_type": "Urine",
+    "organism": "Escherichia coli",
+    "antibiotic_profile": {
+      "Ampicillin": "R",
+      "Ciprofloxacin": "S",
+      "Gentamicin": "S"
+    }
+  },
+  {
+    "patient_uid": "P003",
+    "patient_name": "Robert Johnson",
+    "specimen_type": "CSF",
+    "organism": "Neisseria meningitidis",
+    "antibiotic_profile": {
+      "Penicillin": "S",
+      "Vancomycin": "S",
+      "Cephalosporin": "S"
+    }
+  },
+  {
+    "patient_uid": "P004",
+    "patient_name": "Sarah Williams",
+    "specimen_type": "Sputum",
+    "organism": "Acinetobacter baumannii",
+    "antibiotic_profile": {
+      "Ampicillin": "R",
+      "Ciprofloxacin": "R",
+      "Gentamicin": "R",
+      "Imipenem": "R",
+      "Tobramycin": "R",
+      "Vancomycin": "I"
+    }
+  },
+  {
+    "patient_uid": "P005",
+    "patient_name": "Michael Brown",
+    "specimen_type": "Wound",
+    "organism": "Pseudomonas aeruginosa",
+    "antibiotic_profile": {
+      "Ampicillin": "R",
+      "Ciprofloxacin": "R",
+      "Gentamicin": "R",
+      "Tobramycin": "R"
+    }
+  }
+]

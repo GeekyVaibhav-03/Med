@@ -1,0 +1,11 @@
+patient_uid,patient_name,specimen_type,organism,Ampicillin,Amoxicillin,Penicillin,Ciprofloxacin,Gentamicin,Erythromycin,Vancomycin,Cephalexin,Levofloxacin,Ceftriaxone
+P101,Alice Garcia,Blood,Staphylococcus aureus,R,R,R,R,R,R,S,R,R,R
+P102,David Martinez,Urine,Klebsiella pneumoniae,R,R,R,S,S,S,S,R,S,R
+P103,Emma Rodriguez,CSF,Streptococcus agalactiae,S,S,S,S,S,S,S,S,S,S
+P104,Frank Thompson,Sputum,Mycobacterium tuberculosis,R,R,R,R,R,R,R,R,R,R
+P105,Grace Lee,Wound,Enterococcus faecium,R,R,R,I,I,R,R,R,I,R
+P106,Henry Wilson,Blood,Candida auris,S,S,S,S,S,S,I,S,S,S
+P107,Ivy Anderson,Stool,Salmonella typhimurium,R,R,R,S,S,S,S,R,S,S
+P108,Jack Taylor,Urine,Proteus mirabilis,R,R,R,R,S,S,S,R,R,R
+P109,Karen White,Sputum,Acinetobacter baumannii,R,R,R,R,R,R,I,R,R,R
+P110,Leo Harris,CSF,Pseudomonas aeruginosa,R,R,R,R,R,R,R,R,R,R
