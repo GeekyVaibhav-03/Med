@@ -78,7 +78,29 @@ const samplePatients = [
       hasFracture: true,
       fractureInfectionRisk: 'medium'
     }
-  }
+  },
+  ...Array.from({ length: 26 }, (_, i) => {
+    const idx = i + 5;
+    return {
+      fullName: `Demo Patient ${idx}`,
+      fatherHusbandName: `Father ${idx}`,
+      gender: idx % 2 === 0 ? 'Male' : 'Female',
+      age: 20 + (idx % 40),
+      address: `${100 + idx} Demo St, City` ,
+      mobileNumber: `98765432${100 + idx}`,
+      aadharNumber: `12345678${900 + idx}`,
+      ward: `Ward ${String.fromCharCode(65 + (idx % 3))}`,
+      bedNumber: `${100 + idx}`,
+      report: {
+        mdrStatus: idx % 4 === 0 ? 'active' : idx % 4 === 1 ? 'follow_up' : idx % 4 === 2 ? 'cleared' : 'follow_up',
+        mdrPositive: idx % 3 === 0,
+        hasSymptoms: idx % 2 === 0,
+        symptomSeverity: idx % 3 === 0 ? 'severe' : idx % 3 === 1 ? 'moderate' : 'mild',
+        hasFracture: idx % 2 === 1,
+        fractureInfectionRisk: idx % 3 === 0 ? 'high' : idx % 3 === 1 ? 'medium' : 'low'
+      }
+    };
+  })
 ];
 
 async function addSamplePatients() {

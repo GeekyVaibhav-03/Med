@@ -18,6 +18,7 @@ const doctorMenuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: 'ri-dashboard-line' },
   { path: '/mdr-predictor', label: 'MDR Predictor', icon: 'ri-brain-line', highlight: true },
   { path: '/map', label: 'Real-Time Map', icon: 'ri-map-pin-line' },
+  { path: '/map3d', label: '3D Map', icon: 'ri-cube-line' },
   { path: '/network', label: 'Contact Network', icon: 'ri-node-tree' },
   { path: '/mdr-flags', label: 'MDR Flags', icon: 'ri-flag-line' },
   { path: '/lab-reports', label: 'Lab Reports', icon: 'ri-file-list-3-line' },

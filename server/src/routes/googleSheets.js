@@ -33,6 +33,51 @@ const RFIDTagSchema = new mongoose.Schema({
 
 const RFIDTag = mongoose.models.RFIDTag || mongoose.model('RFIDTag', RFIDTagSchema);
 
+// ==================== CSV Parser ====================
+function parseCSV(csvText) {
+  const rows = [];
+  let currentRow = [];
+  let currentCell = '';
+  let insideQuotes = false;
+  
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i];
+    const nextChar = csvText[i + 1];
+    
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        currentCell += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentCell);
+      currentCell = '';
+    } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !insideQuotes) {
+      currentRow.push(currentCell);
+      if (currentRow.some(cell => cell.trim())) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = '';
+      if (char === '\r') i++;
+    } else if (char !== '\r') {
+      currentCell += char;
+    }
+  }
+  
+  // Push last row
+  if (currentCell || currentRow.length > 0) {
+    currentRow.push(currentCell);
+    if (currentRow.some(cell => cell.trim())) {
+      rows.push(currentRow);
+    }
+  }
+  
+  return rows;
+}
+
 // ==================== OPTION 1: PUBLIC CSV EXPORT ====================
 // Make your Google Sheet public (Share > Anyone with link > Viewer)
 // Then use this endpoint to fetch data

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import MDRFlags3D from './MDRFlags3D';
+import { v4 as uuidv4 } from 'uuid';
 
 const MDRFlags = () => {
   const [patients, setPatients] = useState([]);
@@ -9,17 +10,42 @@ const MDRFlags = () => {
 
   useEffect(() => {
     fetchPatientsWithFlags();
+    const interval = setInterval(fetchPatientsWithFlags, 30000); // Fetch every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const fetchPatientsWithFlags = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/patients/flags');
+      // Fetch from Google Sheets instead
+      const response = await api.get('/sheets/fetch');
       if (response.data.ok) {
-        setPatients(response.data.patients);
+        const colorCycle = ['red', 'orange', 'yellow', 'green'];
+        const statusCycle = ['MDR Positive', 'Follow Up', 'At Risk', 'Safe'];
+        const sheetsData = response.data.data.slice(0, 30); // Limit to 30
+        // Process each row, assign color and status in round-robin
+        const patientsWithFlags = sheetsData.map((row, index) => {
+          const color = colorCycle[index % 4];
+          const status = statusCycle[index % 4];
+          return {
+            id: row.aadharNumber || row.id || index,
+            uid: row.uid || uuidv4(),
+            name: row.fullName || row.name || `Patient ${index + 1}`,
+            age: row.age || 0,
+            gender: row.gender || 'Unknown',
+            ward: row.ward || 'Ward A',
+            bedNumber: row.bedNumber || row.bed_number || '',
+            flags: {
+              mdr: { status, color },
+              symptoms: { status: 'none', color: 'green' },
+              fracture: { status: 'none', color: 'green' }
+            }
+          };
+        });
+        setPatients(patientsWithFlags);
       }
     } catch (error) {
-      console.error('Error fetching MDR flags:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }

@@ -132,7 +132,7 @@ const app = express();
 
 // --- Middlewares ---
 app.use(cors({
-  origin: ["http://localhost:4000", "http://localhost:4001"],  // ✅ Allow both ports
+  origin: ["http://localhost:4000", "http://localhost:4001", "http://localhost:5000"],  // ✅ Allow ports
   credentials: true,               // ✅ REQUIRED for login
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -189,7 +189,7 @@ app.get('/health', async (req, res) => {
 
   res.json({ ok: true, ...health });
 });// --- HTTP + Socket ---
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = initSocket(server);
 app.locals.io = io;
@@ -210,7 +210,7 @@ async function start() {
       console.log(`🔌 Socket.IO: Ready\n`);
       
       // Start automatic Google Sheets syncing
-      startAutoSync(io);
+      // startAutoSync(io);
     });
   } catch (err) {
     console.error(err);

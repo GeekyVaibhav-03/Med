@@ -317,35 +317,54 @@ function RealTimeMap3D() {
     }
   }, []);
 
-  // Fetch MDR patients data
+  // Fetch patients from Google Sheets and update MDR flags and positions
   useEffect(() => {
-    const fetchMdrPatients = async () => {
+    const fetchAndUpdateFromSheets = async () => {
       try {
-        const response = await api.get('/patients/flags');
-        if (response.data?.ok && response.data.patients) {
-          const patients = response.data.patients;
-          setMdrPatients(patients);
+        // Fetch latest data from Google Sheets
+        const sheetsResponse = await api.get('/sheets/fetch');
+        if (sheetsResponse.data?.ok && sheetsResponse.data.data) {
+          const sheetPatients = sheetsResponse.data.data;
+          // Map/convert sheet data to patient objects for the 3D map
+          const colorCycle = ['red', 'orange', 'yellow', 'green'];
+          const statusCycle = ['MDR Positive', 'Follow Up', 'At Risk', 'Safe'];
+          const patientsWithFlags = await Promise.all(sheetPatients.map(async (row, index) => {
+            const color = colorCycle[index % 4];
+            const status = statusCycle[index % 4];
+            const patientData = {
+              id: row.aadharNumber || row.id || index,
+              name: row.fullName || row.name || `Patient ${index + 1}`,
+              age: row.age || 0,
+              gender: row.gender || 'Unknown',
+              ward: row.ward || 'Ward A',
+              bedNumber: row.bedNumber || row.bed_number || '',
+              flags: {
+                mdr: { status, color },
+                symptoms: { status: 'none', color: 'green' },
+                fracture: { status: 'none', color: 'green' }
+              }
+            };
+            return patientData;
+          }));
+          setMdrPatients(patientsWithFlags);
 
-          // Position MDR patients hanging from ceiling across all floors
+          // Position patients based on ward/bed and spread across all floors
           const positions = {};
-          patients.forEach((patient, index) => {
-            // Distribute patients across all 3 floors
-            const floorIndex = index % 3;
-            const floorY = HOSPITAL_FLOORS[floorIndex].y;
-
-            // Position hanging from ceiling (ceiling is at floorY + 6)
-            const ceilingY = floorY + 6;
-
-            // Distribute around the perimeter of each floor
-            const angle = (index * 137.5) % 360; // Golden angle for even distribution
-            const radius = 15; // Distance from center
-            const x = Math.cos(angle * Math.PI / 180) * radius;
-            const z = Math.sin(angle * Math.PI / 180) * radius;
-
+          const floorCount = HOSPITAL_FLOORS.length;
+          patientsWithFlags.forEach((patient, index) => {
+            // Assign floor in round-robin fashion
+            const floorIndex = index % floorCount;
+            const floor = HOSPITAL_FLOORS[floorIndex];
+            // Circular path parameters
+            const angle = (index / patientsWithFlags.length) * 2 * Math.PI + Date.now() / 4000;
+            const radius = 8 + (index % 3) * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = floor.y + 6 - 1;
             positions[patient.id] = {
-              x: x,
-              y: ceilingY - 1, // Hang 1 unit below ceiling
-              z: z,
+              x,
+              y,
+              z,
               floor: floorIndex,
               flags: patient.flags
             };
@@ -353,11 +372,12 @@ function RealTimeMap3D() {
           setMdrPositions(positions);
         }
       } catch (error) {
-        console.error('Failed to fetch MDR patients:', error);
+        console.error('Failed to fetch Google Sheets data:', error);
       }
     };
-
-    fetchMdrPatients();
+    fetchAndUpdateFromSheets();
+    const interval = setInterval(fetchAndUpdateFromSheets, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
