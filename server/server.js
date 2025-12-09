@@ -24,6 +24,8 @@ const notificationsRoutes = require('./src/routes/notifications'); // ✅ NEW
 const { requireAuth, requireRole } = require('./src/middleware/auth');
 const rfidRoutes = require("./src/routes/rfid");
 const usersRouter = require('./src/routes/users'); // fixed path
+const gpsRoutes = require('./src/routes/gps'); // GPS Tracking routes
+const equipmentRoutes = require('./src/routes/equipment'); // Equipment Tracking routes
 
 const { init: initSocket } = require('./src/socket'); // socket initializer
 
@@ -54,6 +56,8 @@ app.use('/api/notifications', requireAuth, notificationsRoutes); // ✅ NEW
 app.use('/api/admin/users', requireAuth, requireRole('admin'), usersRouter);
 app.use('/admin/users', requireAuth, requireRole('admin'), usersRouter);
 app.use("/api", rfidRoutes);
+app.use('/api/gps', gpsRoutes); // GPS Tracking API
+app.use('/api/equipment', equipmentRoutes); // Equipment & RFID Tracking API
 
 // --- Health Check ---
 app.get('/', (req, res) => {

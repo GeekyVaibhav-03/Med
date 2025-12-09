@@ -1,260 +1,188 @@
-import { useState, useEffect, useRef } from 'react';
-import Card from '../../../components/Card';
-import Modal from '../../../components/Modal';
-import gsap from 'gsap';
+// Equipment Check Component
+// Simple equipment checklist for medical staff
+
+import { useState, useEffect } from 'react';
+import api from '../../../services/api';
 
 const EquipmentCheck = () => {
-  const containerRef = useRef(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedEquipment, setSelectedEquipment] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-
-  // Static/mock data for equipment
   const [equipment, setEquipment] = useState([
-    {
-      id: 'EQ001',
-      name: 'Ventilator A',
-      contaminated: true,
-      action: 'Quarantine',
-      lastUsers: [
-        { userName: 'Ramesh Kumar', timestamp: Date.now() - 3600000, status: 'red' },
-        { userName: 'Sunita Devi', timestamp: Date.now() - 7200000, status: 'yellow' },
-      ],
-    },
-    {
-      id: 'EQ002',
-      name: 'ECG Machine',
-      contaminated: false,
-      action: 'Clean',
-      lastUsers: [
-        { userName: 'Dr. Amit', timestamp: Date.now() - 1800000, status: 'green' },
-      ],
-    },
-    {
-      id: 'EQ003',
-      name: 'Infusion Pump',
-      contaminated: true,
-      action: 'Replace',
-      lastUsers: [
-        { userName: 'Nurse Priya', timestamp: Date.now() - 5400000, status: 'red' },
-      ],
-    },
-    {
-      id: 'EQ004',
-      name: 'Ultrasound Machine',
-      contaminated: false,
-      action: 'Safe',
-      lastUsers: [
-        { userName: 'Vikram Patel', timestamp: Date.now() - 900000, status: 'green' },
-      ],
-    },
+    { id: 1, name: 'Ventilator', zone: 'ICU', status: 'operational', lastChecked: '2024-01-15', nextDue: '2024-02-15' },
+    { id: 2, name: 'Defibrillator', zone: 'Emergency', status: 'operational', lastChecked: '2024-01-14', nextDue: '2024-02-14' },
+    { id: 3, name: 'IV Pump', zone: 'General Ward', status: 'needs_maintenance', lastChecked: '2024-01-10', nextDue: '2024-01-17' },
+    { id: 4, name: 'Patient Monitor', zone: 'ICU', status: 'operational', lastChecked: '2024-01-15', nextDue: '2024-02-15' },
+    { id: 5, name: 'Oxygen Concentrator', zone: 'Emergency', status: 'operational', lastChecked: '2024-01-13', nextDue: '2024-02-13' },
+    { id: 6, name: 'ECG Machine', zone: 'Cardiology', status: 'under_repair', lastChecked: '2024-01-08', nextDue: '2024-01-22' },
+    { id: 7, name: 'Ultrasound', zone: 'Radiology', status: 'operational', lastChecked: '2024-01-12', nextDue: '2024-02-12' },
+    { id: 8, name: 'Wheelchair', zone: 'Lobby', status: 'operational', lastChecked: '2024-01-15', nextDue: '2024-03-15' },
   ]);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      gsap.fromTo(
-        containerRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
-      );
-    }
-  }, []);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleEquipmentClick = (eq) => {
-    setSelectedEquipment(eq);
-    setShowModal(true);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'operational': return 'bg-green-100 text-green-800';
+      case 'needs_maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 'under_repair': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const filteredEquipment = equipment.filter((eq) =>
-    eq.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    eq.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'operational': return '✓';
+      case 'needs_maintenance': return '⚠';
+      case 'under_repair': return '🔧';
+      default: return '?';
+    }
+  };
 
-  const getActionBadge = (action) => {
-    const badges = {
-      Replace: { bg: 'bg-red-500', icon: 'ri-close-circle-fill' },
-      Clean: { bg: 'bg-yellow-500', icon: 'ri-alert-fill' },
-      Quarantine: { bg: 'bg-orange-500', icon: 'ri-lock-fill' },
-      Safe: { bg: 'bg-green-500', icon: 'ri-checkbox-circle-fill' },
-    };
-    return badges[action] || badges.Safe;
+  const filteredEquipment = equipment.filter(eq => {
+    const matchesFilter = filter === 'all' || eq.status === filter;
+    const matchesSearch = eq.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          eq.zone.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const markAsChecked = (id) => {
+    setEquipment(prev => prev.map(eq => {
+      if (eq.id === id) {
+        const today = new Date().toISOString().split('T')[0];
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        return {
+          ...eq,
+          lastChecked: today,
+          nextDue: nextMonth.toISOString().split('T')[0],
+          status: 'operational'
+        };
+      }
+      return eq;
+    }));
+  };
+
+  const stats = {
+    total: equipment.length,
+    operational: equipment.filter(e => e.status === 'operational').length,
+    needsMaintenance: equipment.filter(e => e.status === 'needs_maintenance').length,
+    underRepair: equipment.filter(e => e.status === 'under_repair').length,
   };
 
   return (
-    <div ref={containerRef} className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-dark-text">Equipment Exposure Check</h1>
-        <p className="text-gray-600 mt-1">Check equipment contamination status / Equipment check karein</p>
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+          <span className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center text-xl">🔧</span>
+          Equipment Check
+        </h1>
+        <p className="text-gray-500 mt-1">Monitor and maintain medical equipment status</p>
       </div>
 
-      {/* Search */}
-      <Card icon="ri-search-line">
-        <input
-          type="text"
-          placeholder="Search by equipment ID or name / Equipment ID ya naam dalein..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-teal text-lg"
-        />
-      </Card>
-
-      {/* Equipment Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEquipment.map((eq) => {
-          const badge = getActionBadge(eq.action);
-          return (
-            <Card
-              key={eq.id}
-              className="cursor-pointer hover:shadow-xl transition-all"
-              onClick={() => handleEquipmentClick(eq)}
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 bg-light-teal rounded-lg flex items-center justify-center">
-                  <i className="ri-stethoscope-line text-3xl text-primary-teal"></i>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-dark-text">{eq.name}</h3>
-                  <p className="text-sm text-gray-600">ID: {eq.id}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                {eq.contaminated ? (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-3">
-                    <p className="text-sm font-semibold text-red-700 flex items-center gap-2">
-                      <i className="ri-alert-fill"></i>
-                      ⚠️ CONTAMINATED
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">MDR patient used this equipment</p>
-                  </div>
-                ) : (
-                  <div className="bg-green-50 border-l-4 border-green-500 p-3">
-                    <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
-                      <i className="ri-checkbox-circle-fill"></i>
-                      ✓ SAFE
-                    </p>
-                  </div>
-                )}
-
-                <div className={`${badge.bg} text-white px-3 py-2 rounded-lg flex items-center justify-between`}>
-                  <span className="font-semibold">Action: {eq.action}</span>
-                  <i className={badge.icon}></i>
-                </div>
-
-                <div className="text-xs text-gray-600">
-                  Last User: {eq.lastUsers[0]?.userName || 'N/A'}
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-sm border">
+          <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+          <div className="text-sm text-gray-500">Total Equipment</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-green-200">
+          <div className="text-2xl font-bold text-green-600">{stats.operational}</div>
+          <div className="text-sm text-gray-500">Operational</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-yellow-200">
+          <div className="text-2xl font-bold text-yellow-600">{stats.needsMaintenance}</div>
+          <div className="text-sm text-gray-500">Needs Maintenance</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-red-200">
+          <div className="text-2xl font-bold text-red-600">{stats.underRepair}</div>
+          <div className="text-sm text-gray-500">Under Repair</div>
+        </div>
       </div>
 
-      {filteredEquipment.length === 0 && (
-        <Card>
-          <div className="text-center py-12 text-gray-500">
-            <i className="ri-search-line text-6xl mb-4"></i>
-            <p className="text-lg">No equipment found</p>
-            <p className="text-sm">Koi equipment nahi mila</p>
+      {/* Filters */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search equipment or zone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        </Card>
-      )}
+          <div className="flex gap-2">
+            {['all', 'operational', 'needs_maintenance', 'under_repair'].map(status => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  filter === status 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {status === 'all' ? 'All' : 
+                 status === 'operational' ? '✓ Operational' :
+                 status === 'needs_maintenance' ? '⚠ Maintenance' : '🔧 Repair'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-      {/* Equipment Detail Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Equipment Details"
-        size="lg"
-      >
-        {selectedEquipment && (
-          <div className="space-y-6">
-            <div className="flex items-start gap-6">
-              <div className="w-20 h-20 bg-light-teal rounded-lg flex items-center justify-center">
-                <i className="ri-stethoscope-line text-4xl text-primary-teal"></i>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-dark-text">{selectedEquipment.name}</h2>
-                <p className="text-gray-600">Equipment ID: {selectedEquipment.id}</p>
-                <div className="mt-3">
-                  {selectedEquipment.contaminated ? (
-                    <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">
-                      ⚠️ CONTAMINATED
-                    </span>
-                  ) : (
-                    <span className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold">
-                      ✓ SAFE
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className={`${getActionBadge(selectedEquipment.action).bg} text-white p-4 rounded-lg`}>
-              <h3 className="text-lg font-bold mb-2">Recommended Action</h3>
-              <p className="text-2xl font-bold">{selectedEquipment.action}</p>
-              <p className="text-sm opacity-90 mt-2">
-                {selectedEquipment.action === 'Replace' && 'Immediate replacement required'}
-                {selectedEquipment.action === 'Clean' && 'Thorough cleaning and disinfection needed'}
-                {selectedEquipment.action === 'Quarantine' && 'Isolate equipment for 48-72 hours'}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold text-dark-text mb-3">Last Users</h3>
-              <div className="space-y-2">
-                {selectedEquipment.lastUsers.map((user, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-light-teal p-3 rounded-lg flex items-center justify-between"
+      {/* Equipment List */}
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left p-4 font-medium text-gray-600">Equipment</th>
+              <th className="text-left p-4 font-medium text-gray-600">Zone</th>
+              <th className="text-left p-4 font-medium text-gray-600">Status</th>
+              <th className="text-left p-4 font-medium text-gray-600">Last Checked</th>
+              <th className="text-left p-4 font-medium text-gray-600">Next Due</th>
+              <th className="text-left p-4 font-medium text-gray-600">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {filteredEquipment.map(eq => (
+              <tr key={eq.id} className="hover:bg-gray-50">
+                <td className="p-4">
+                  <div className="font-medium text-gray-800">{eq.name}</div>
+                </td>
+                <td className="p-4">
+                  <span className="text-gray-600">{eq.zone}</span>
+                </td>
+                <td className="p-4">
+                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(eq.status)}`}>
+                    {getStatusIcon(eq.status)} {eq.status.replace('_', ' ')}
+                  </span>
+                </td>
+                <td className="p-4 text-gray-600">{eq.lastChecked}</td>
+                <td className="p-4">
+                  <span className={`${new Date(eq.nextDue) < new Date() ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                    {eq.nextDue}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <button
+                    onClick={() => markAsChecked(eq.id)}
+                    className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition"
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                          user.status === 'red'
-                            ? 'bg-red-500'
-                            : user.status === 'yellow'
-                            ? 'bg-yellow-500'
-                            : 'bg-green-500'
-                        }`}
-                      >
-                        {user.userName.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium">{user.userName}</p>
-                        <p className="text-xs text-gray-600">
-                          {new Date(user.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.status === 'red'
-                          ? 'bg-red-100 text-red-700'
-                          : user.status === 'yellow'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}
-                    >
-                      {user.status.toUpperCase()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {selectedEquipment.contaminated && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-bold text-red-700 mb-2">⚠️ Contamination Alert</h4>
-                <p className="text-sm text-red-600">
-                  This equipment was used by an MDR-positive patient. All subsequent users within
-                  24-72 hours are flagged for screening.
-                </p>
-              </div>
-            )}
+                    Mark Checked
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        {filteredEquipment.length === 0 && (
+          <div className="p-8 text-center text-gray-500">
+            No equipment found matching your criteria.
           </div>
         )}
-      </Modal>
+      </div>
     </div>
   );
 };

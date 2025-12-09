@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import DoctorDashboard from '../features/doctor/DoctorDashboard/DoctorDashboard';
 import PatientSearch from '../features/doctor/PatientSearch/PatientSearch';
 import RealTimeMap from '../features/doctor/RealTimeMap/RealTimeMap';
+import RealTimeMap3D from '../features/doctor/RealTimeMap/RealTimeMap3D';
 import NetworkGraph from '../features/doctor/NetworkGraph/NetworkGraph';
+import NetworkGraph3D from '../features/doctor/NetworkGraph/NetworkGraph3D';
 import EquipmentCheck from '../features/doctor/EquipmentCheck/EquipmentCheck';
+import EquipmentTracking from '../features/doctor/EquipmentTracking/EquipmentTracking';
 import Checklist from '../features/doctor/Checklist/Checklist';
 import LabReports from '../features/doctor/LabReports/LabReports';
 
@@ -95,13 +98,22 @@ const DoctorRoute = () => {
                 Patient Search
               </Link>
               <Link to="/doctor/map" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Real-Time Map
+                2D Map
+              </Link>
+              <Link to="/doctor/map3d" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
+                🏥 3D Map
               </Link>
               <Link to="/doctor/network" className="text-gray-600 hover:text-[#0E8B86] transition">
                 Network Graph
               </Link>
+              <Link to="/doctor/network3d" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
+                🕸️ 3D Network
+              </Link>
               <Link to="/doctor/equipment" className="text-gray-600 hover:text-[#0E8B86] transition">
                 Equipment
+              </Link>
+              <Link to="/doctor/equipment-tracking" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
+                📡 RFID Tracking
               </Link>
               <Link to="/doctor/checklist" className="text-gray-600 hover:text-[#0E8B86] transition">
                 Checklist
@@ -172,8 +184,11 @@ const DoctorRoute = () => {
           <Route path="/dashboard" element={<DoctorDashboard />} />
           <Route path="/search" element={<PatientSearch />} />
           <Route path="/map" element={<RealTimeMap />} />
+          <Route path="/map3d" element={<RealTimeMap3D />} />
           <Route path="/network" element={<NetworkGraph />} />
+          <Route path="/network3d" element={<NetworkGraph3D />} />
           <Route path="/equipment" element={<EquipmentCheck />} />
+          <Route path="/equipment-tracking" element={<EquipmentTracking />} />
           <Route path="/checklist" element={<Checklist />} />
           <Route path="/lab-reports" element={<LabReports />} />
         </Routes>
