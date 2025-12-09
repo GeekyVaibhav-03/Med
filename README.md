@@ -95,11 +95,11 @@ MedWatch is built on a robust, scalable architecture designed for reliability.
 
 ```mermaid
 graph TD
-    Client[Process: Client (React + Vite)]
-    Server[Process: Server (Node + Express)]
-    DB[(Database: SQLite/Postgres)]
-    Socket[WebSocket Service]
-    MDR[MDR Analysis Engine]
+    Client["Process: Client (React + Vite)"]
+    Server["Process: Server (Node + Express)"]
+    DB[("Database: SQLite/Postgres")]
+    Socket["WebSocket Service"]
+    MDR["MDR Analysis Engine"]
     
     Client -->|REST API| Server
     Client -- Real-time --> Socket
