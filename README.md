@@ -146,31 +146,95 @@ Med/
 
 ## 🔧 Technology Stack
 
-### Frontend
-- **React 18** + **Vite**
-- **TailwindCSS** (styling)
-- **Socket.io-client** (real-time)
-- **React Router** (navigation)
-- **Zustand** (state management)
-- **Cytoscape** (network graphs)
-- **Recharts** (charts)
-- **GSAP** (animations)
+1. Frontend (Web Dashboard)
 
-### Backend
-- **Express.js** (web framework)
-- **Node.js 16+** (runtime)
-- **Sequelize** (ORM)
-- **SQLite3** (database)
-- **Socket.io** (real-time events)
-- **Multer** (file uploads)
-- **JWT** (authentication)
-- **bcrypt** (password hashing)
+Used by: Admin, Doctors, Infection Control Team
+Purpose: Real-time alerts, patient tracking, MDR dashboard, uploads.
 
-### Database
-- **SQLite** (file-based, zero setup)
-- **8 models** (User, Patient, LabReport, Notification, MdrCase, etc.)
-- **Auto-sync** on startup
+Core:
+React.js (Vite) – Fast modern frontend
+TailwindCSS – UI styling (helps make clean hospital dashboards)
+React Router – Navigation
+Zustand / Redux – State management
+Socket.io Client – Real-time MDR alerts
+Recharts – Analytics graphs
+Cytoscape.js – Contact tracing visual network graph
+GSAP – Animations
+Axios / Fetch API – API communication
 
+2. Backend (API + MDR Logic)
+
+Purpose: Lab report processing, MDR detection, contact tracing logic, user management.
+
+Core:
+Node.js + Express.js – REST API
+Socket.io – Real-time alert system
+Sequelize – ORM for database
+JWT – Authentication
+bcrypt.js – Password hashing
+Multer – File uploads (CSV/JSON for lab reports)
+
+Internal Services:
+MDR Detection Engine
+Organism recognition (MRSA, ESBL, VRE, CRE, etc.)
+Antibiotic resistance calculator (≥3 classes, ≥50% R rule)
+Contact Tracing Engine
+Uses RFID/BLE/IoT interactions
+Builds patient-doctor-nurse contact graph
+Exposure scoring
+
+3. Database
+
+Purpose: Store patient history, events, MDR cases, logs.
+Options:
+SQLite (currently in the repo) – Good for simple deployments
+PostgreSQL (recommended for SIH finals) – Stable, scalable
+Redis (optional) – For caching live IoT event streams
+Schema Includes:
+Users
+Patients
+LabReports
+Notifications
+MDR Cases
+Contact Edges
+Room/Department Mapping
+Event Logs
+
+4. IoT / Data Input Layer (for RFID-based Contact Tracing)
+
+Purpose: Real-time movement + interaction data from hospital.
+
+Devices:
+RFID/BLE Tags (patient wristbands, staff badges)
+RFID Gate Readers / BLE Beacons
+WiFi RTT or UWB Tags (optional for high accuracy)
+Tech to Ingest
+MQTT Broker (Mosquitto / EMQX)
+Node.js MQTT Client
+Python Scripts (optional for signal processing)
+
+5. Deployment & CI/CD
+Hosting
+Docker + Docker Compose
+AWS / Azure / GCP / Render / Railway
+Nginx – Reverse proxy
+CI/CD
+GitHub Actions – Build/test autodeploy pipeline
+
+6. Security + Compliance
+
+RBAC (Role-Based Access Control)
+JWT Authentication
+Data Encryption (AES/HTTPS)
+Audit Logs
+Secure File Uploads
+
+7. Tools for Development
+
+Postman / Thunder Client – API testing
+Figma – UI/UX design
+GitHub – Version control
+ESLint + Prettier – Clean consistent code
 ---
 
 ## 📊 Lab Report Upload Workflow
