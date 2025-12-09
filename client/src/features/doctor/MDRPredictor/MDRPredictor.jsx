@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Loader2, Brain, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const MDRPredictor = () => {
   const [formData, setFormData] = useState({
+    uid: uuidv4(),
     age: '',
     gender: '',
     // Clinical parameters for MDR prediction
@@ -98,6 +100,7 @@ const MDRPredictor = () => {
       };
 
       setPrediction({
+        uid: uuidv4(),
         prediction: predictionResult,
         category: categories[predictionResult],
         confidence: confidence,
@@ -163,6 +166,15 @@ const MDRPredictor = () => {
           <div className="p-6 pt-0 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">UID</label>
+                <input
+                  type="text"
+                  value={formData.uid.slice(0, 8)}
+                  readOnly
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Age *</label>
                 <input
                   type="number"
@@ -172,6 +184,8 @@ const MDRPredictor = () => {
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Gender *</label>
                 <select
@@ -339,6 +353,7 @@ const MDRPredictor = () => {
                   {getCategoryIcon(prediction.category.status)}
                   Prediction Result
                 </h3>
+                <div className="text-xs text-gray-500 mt-1">UID: {prediction.uid.slice(0, 8)}</div>
               </div>
               <div className="p-6 pt-0">
                 <div className={`p-4 rounded-lg border-2 ${getCategoryColor(prediction.category.status)}`}>
