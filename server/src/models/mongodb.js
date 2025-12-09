@@ -109,8 +109,64 @@ const patientSchema = new mongoose.Schema({
     contactTracingInitiated: { type: Boolean, default: false },
     treatmentStarted: Date,
     notes: String
+  },
+  // MDR Flag Report
+  report: {
+    mdrStatus: { type: String, enum: ['active', 'cleared', 'follow_up'], default: 'follow_up' },
+    mdrPositive: { type: Boolean, default: false },
+    hasSymptoms: { type: Boolean, default: false },
+    symptomSeverity: { type: String, enum: ['none', 'mild', 'moderate', 'severe'], default: 'none' },
+    hasFracture: { type: Boolean, default: false },
+    fractureInfectionRisk: { type: String, enum: ['low', 'medium', 'high'], default: 'low' }
   }
 }, { timestamps: true });
+
+// Add method to compute MDR flags
+patientSchema.methods.computeFlags = function() {
+  const report = this.report || {};
+  
+  // MDR Flag
+  let mdrFlag = { color: 'green', status: 'none' };
+  if (report.mdrPositive && report.mdrStatus === 'active') {
+    mdrFlag = { color: 'red', status: 'mdr_positive' };
+  } else if (report.mdrPositive && report.mdrStatus === 'follow_up') {
+    mdrFlag = { color: 'orange', status: 'mdr_positive_suspected' };
+  } else if (report.mdrStatus === 'cleared') {
+    mdrFlag = { color: 'green', status: 'discharge' };
+  } else {
+    mdrFlag = { color: 'yellow', status: 'follow_up' };
+  }
+  
+  // Symptoms Flag
+  let symptomsFlag = { color: 'green', status: 'none' };
+  if (report.hasSymptoms) {
+    if (report.symptomSeverity === 'severe') {
+      symptomsFlag = { color: 'red', status: 'needs_attention' };
+    } else if (report.symptomSeverity === 'moderate') {
+      symptomsFlag = { color: 'orange', status: 'follow_up' };
+    } else if (report.symptomSeverity === 'mild') {
+      symptomsFlag = { color: 'yellow', status: 'monitor' };
+    }
+  }
+  
+  // Fracture Flag
+  let fractureFlag = { color: 'green', status: 'none' };
+  if (report.hasFracture) {
+    if (report.fractureInfectionRisk === 'high') {
+      fractureFlag = { color: 'red', status: 'needs_xray' };
+    } else if (report.fractureInfectionRisk === 'medium') {
+      fractureFlag = { color: 'orange', status: 'follow_up' };
+    } else if (report.fractureInfectionRisk === 'low') {
+      fractureFlag = { color: 'yellow', status: 'monitor' };
+    }
+  }
+  
+  return {
+    mdr: mdrFlag,
+    symptoms: symptomsFlag,
+    fracture: fractureFlag
+  };
+};
 
 // Person Schema (RFID tracked individuals)
 const personSchema = new mongoose.Schema({

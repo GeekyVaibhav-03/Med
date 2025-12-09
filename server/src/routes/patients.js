@@ -186,6 +186,40 @@ router.patch("/:id/mdr", async (req, res) => {
   }
 });
 
+// GET /api/patients/flags - Get all patients with computed MDR flags
+router.get("/flags", async (req, res) => {
+  try {
+    if (!Patient) {
+      return res.status(500).json({ ok: false, error: "Patient model not available" });
+    }
+
+    const patients = await Patient.find({}).sort({ createdAt: -1 });
+
+    const patientsWithFlags = patients.map((patient) => {
+      const flags = patient.computeFlags();
+      return {
+        id: patient._id.toString(),
+        name: patient.fullName,
+        age: patient.age,
+        gender: patient.gender,
+        ward: patient.ward,
+        bedNumber: patient.bedNumber,
+        status: patient.status,
+        flags: flags
+      };
+    });
+
+    res.json({ 
+      ok: true, 
+      patients: patientsWithFlags, 
+      count: patientsWithFlags.length 
+    });
+  } catch (err) {
+    console.error("MDR Flags Error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to get MDR flags" });
+  }
+});
+
 // GET /api/patients/:id - Get single patient by ID
 router.get("/:id", async (req, res) => {
   try {

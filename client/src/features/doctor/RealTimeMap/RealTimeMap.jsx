@@ -1,5 +1,6 @@
 // Enhanced Real-Time Map with actual MongoDB patient data
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Stage, Layer, Rect, Circle, Text } from 'react-konva';
 import api from '../../../services/api';
 import gsap from 'gsap';
@@ -190,6 +191,13 @@ const RealTimeMap = () => {
           </p>
         </div>
         <div className="flex gap-3">
+          <Link
+            to="/doctor/map3d"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center gap-2"
+          >
+            <i className="ri-cube-line"></i>
+            3D View
+          </Link>
           {isLive ? (
             <button
               onClick={handleStopLive}

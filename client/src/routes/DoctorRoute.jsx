@@ -3,14 +3,12 @@ import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 import DoctorDashboard from '../features/doctor/DoctorDashboard/DoctorDashboard';
-import PatientSearch from '../features/doctor/PatientSearch/PatientSearch';
 import RealTimeMap from '../features/doctor/RealTimeMap/RealTimeMap';
 import RealTimeMap3D from '../features/doctor/RealTimeMap/RealTimeMap3D';
 import NetworkGraph from '../features/doctor/NetworkGraph/NetworkGraph';
 import NetworkGraph3D from '../features/doctor/NetworkGraph/NetworkGraph3D';
-import EquipmentCheck from '../features/doctor/EquipmentCheck/EquipmentCheck';
-import EquipmentTracking from '../features/doctor/EquipmentTracking/EquipmentTracking';
-import Checklist from '../features/doctor/Checklist/Checklist';
+import MDRFlags from '../features/doctor/MDRFlags/MDRFlags';
+import MDRPredictor from '../features/doctor/MDRPredictor/MDRPredictor';
 import LabReports from '../features/doctor/LabReports/LabReports';
 
 import useAuthStore from '../store/useAuthStore';
@@ -18,11 +16,10 @@ import LogoutButton from '../components/LogoutButton';
 
 const doctorMenuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: 'ri-dashboard-line' },
-  { path: '/search', label: 'Patient Search', icon: 'ri-search-line' },
+  { path: '/mdr-predictor', label: 'MDR Predictor', icon: 'ri-brain-line', highlight: true },
   { path: '/map', label: 'Real-Time Map', icon: 'ri-map-pin-line' },
   { path: '/network', label: 'Contact Network', icon: 'ri-node-tree' },
-  { path: '/equipment', label: 'Equipment Check', icon: 'ri-stethoscope-line' },
-  { path: '/checklist', label: 'MDR Checklist', icon: 'ri-checkbox-multiple-line' },
+  { path: '/mdr-flags', label: 'MDR Flags', icon: 'ri-flag-line' },
   { path: '/lab-reports', label: 'Lab Reports', icon: 'ri-file-list-3-line' },
 ];
 
@@ -91,36 +88,20 @@ const DoctorRoute = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/doctor/dashboard" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
-                Dashboard
-              </Link>
-              <Link to="/doctor/search" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Patient Search
-              </Link>
-              <Link to="/doctor/map" className="text-gray-600 hover:text-[#0E8B86] transition">
-                2D Map
-              </Link>
-              <Link to="/doctor/map3d" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
-                🏥 3D Map
-              </Link>
-              <Link to="/doctor/network" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Network Graph
-              </Link>
-              <Link to="/doctor/network3d" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
-                🕸️ 3D Network
-              </Link>
-              <Link to="/doctor/equipment" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Equipment
-              </Link>
-              <Link to="/doctor/equipment-tracking" className="text-gray-600 hover:text-[#0E8B86] transition font-medium">
-                📡 RFID Tracking
-              </Link>
-              <Link to="/doctor/checklist" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Checklist
-              </Link>
-              <Link to="/doctor/lab-reports" className="text-gray-600 hover:text-[#0E8B86] transition">
-                Lab Reports
-              </Link>
+              {doctorMenuItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={`/doctor${item.path}`}
+                  className={`transition font-medium ${
+                    item.highlight
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105'
+                      : 'text-gray-600 hover:text-[#0E8B86]'
+                  }`}
+                >
+                  {item.icon && <i className={`${item.icon} mr-2`}></i>}
+                  {item.label}
+                </Link>
+              ))}
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Welcome</p>
@@ -148,27 +129,20 @@ const DoctorRoute = () => {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pb-4 space-y-3">
-              <Link to="/doctor/dashboard" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition font-medium">
-                Dashboard
-              </Link>
-              <Link to="/doctor/search" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Patient Search
-              </Link>
-              <Link to="/doctor/map" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Real-Time Map
-              </Link>
-              <Link to="/doctor/network" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Network Graph
-              </Link>
-              <Link to="/doctor/equipment" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Equipment
-              </Link>
-              <Link to="/doctor/checklist" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Checklist
-              </Link>
-              <Link to="/doctor/lab-reports" className="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                Lab Reports
-              </Link>
+              {doctorMenuItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={`/doctor${item.path}`}
+                  className={`block px-4 py-2 rounded-lg transition ${
+                    item.highlight
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {item.icon && <i className={`${item.icon} mr-2`}></i>}
+                  {item.label}
+                </Link>
+              ))}
               <div className="px-4 py-2">
                 <p className="text-sm text-gray-600">Welcome, Dr. {user?.username || 'User'}</p>
                 <LogoutButton />
@@ -182,14 +156,12 @@ const DoctorRoute = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/doctor/dashboard" replace />} />
           <Route path="/dashboard" element={<DoctorDashboard />} />
-          <Route path="/search" element={<PatientSearch />} />
           <Route path="/map" element={<RealTimeMap />} />
           <Route path="/map3d" element={<RealTimeMap3D />} />
           <Route path="/network" element={<NetworkGraph />} />
           <Route path="/network3d" element={<NetworkGraph3D />} />
-          <Route path="/equipment" element={<EquipmentCheck />} />
-          <Route path="/equipment-tracking" element={<EquipmentTracking />} />
-          <Route path="/checklist" element={<Checklist />} />
+          <Route path="/mdr-flags" element={<MDRFlags />} />
+          <Route path="/mdr-predictor" element={<MDRPredictor />} />
           <Route path="/lab-reports" element={<LabReports />} />
         </Routes>
       </main>

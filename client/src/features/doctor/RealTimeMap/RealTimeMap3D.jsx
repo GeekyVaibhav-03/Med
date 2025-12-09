@@ -1,11 +1,10 @@
-// 3D Real-Time Hospital Map - Working Version
-// Features: Three.js + WebGL + Real-time tracking
+// 3D Hospital Map - Clean Base
+// Basic 3D hospital visualization without data layers
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { io } from 'socket.io-client';
 import gsap from 'gsap';
 import api from '../../../services/api';
 
@@ -148,78 +147,19 @@ function Room({ room, floorY }) {
   );
 }
 
-// ==================== PATIENT AVATAR ====================
-function PatientAvatar({ patient, position, isSelected, onClick }) {
-  const groupRef = useRef();
-  const currentPos = useRef(new THREE.Vector3(...position));
-
-  const getColor = () => {
-    const risk = patient.riskLevel || patient.status;
-    switch (risk) {
-      case 'critical':
-      case 'red': return '#ef4444';
-      case 'high':
-      case 'orange': return '#f97316';
-      case 'medium':
-      case 'yellow': return '#eab308';
-      default: return '#22c55e';
-    }
-  };
-
-  const color = getColor();
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      const target = new THREE.Vector3(...position);
-      currentPos.current.lerp(target, 0.05);
-      groupRef.current.position.copy(currentPos.current);
-      groupRef.current.position.y += Math.sin(state.clock.elapsedTime * 3) * 0.03;
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={position} onClick={onClick}>
-      {/* Body */}
-      <mesh castShadow>
-        <capsuleGeometry args={[0.2, 0.4, 4, 16]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.5 : 0.2} metalness={0.3} roughness={0.4} />
-      </mesh>
-
-      {/* Head */}
-      <mesh position={[0, 0.5, 0]} castShadow>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial color="#fcd5ce" metalness={0.1} roughness={0.8} />
-      </mesh>
-
-      {/* Ground ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, 0]}>
-        <ringGeometry args={[0.25, 0.35, 32]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Name label */}
-      <Html position={[0, 1, 0]} center distanceFactor={20}>
-        <div
-          className={`px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${
-            isSelected ? 'bg-white shadow-xl scale-125' : 'bg-white/90 shadow'
-          }`}
-          style={{ borderLeft: `3px solid ${color}` }}
-        >
-          <div className="text-gray-800">{patient.name || patient.uid}</div>
-          <div className="text-gray-500 text-[10px]">{patient.room || 'Active'}</div>
-        </div>
-      </Html>
-
-      {/* Selection ring */}
-      {isSelected && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.35, 0]}>
-          <ringGeometry args={[0.5, 0.65, 32]} />
-          <meshBasicMaterial color="#3b82f6" transparent opacity={0.7} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-    </group>
-  );
-}
+// ==================== RFID POINT TO COORDINATE MAPPING ====================
+// Map RFID point names to coordinates on Floor 1 (General Ward)
+const RFID_POINT_MAPPING = {
+  'ROOM-1': { x: -12, z: -8, room: 'Room 101' },
+  'ROOM-2': { x: -6, z: -8, room: 'Room 102' },
+  'ROOM-3': { x: 0, z: -8, room: 'Room 103' },
+  'ROOM-4': { x: 6, z: -8, room: 'Room 104' },
+  'ROOM-5': { x: 12, z: -8, room: 'Room 105' },
+  'NS-1': { x: 0, z: 2, room: 'Nurse Station' },
+  'Unknown': { x: 0, z: 0, room: 'Unknown Location' },
+  // Default position for unmapped points
+  'default': { x: 0, z: 0, room: 'Unknown Location' }
+};
 
 // ==================== ELEVATOR ====================
 function Elevator({ position }) {
@@ -255,18 +195,120 @@ function Elevator({ position }) {
   );
 }
 
+// ==================== HANGING MDR PATIENT COMPONENT ====================
+function HangingMDRPatient({ patient, position, isSelected, onClick }) {
+  const groupRef = useRef();
+  const swingRef = useRef();
+
+  const getColorFromFlag = (color) => {
+    switch (color) {
+      case 'red': return '#ef4444';    // MDR disease
+      case 'orange': return '#f97316'; // Follow ups
+      case 'yellow': return '#eab308'; // At risk
+      case 'green': return '#22c55e';  // Safe/Discharge
+      default: return '#6b7280';
+    }
+  };
+
+  // Get the primary MDR flag color for the hanging structure
+  const primaryColor = getColorFromFlag(patient.flags.mdr.color);
+
+  useFrame((state) => {
+    if (swingRef.current) {
+      // Gentle swinging motion
+      swingRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+      swingRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[position.x, position.y, position.z]}>
+      {/* Hanging rope/string */}
+      <mesh position={[0, 2, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 4, 8]} />
+        <meshStandardMaterial color="#666666" />
+      </mesh>
+
+      {/* Hanging hook */}
+      <mesh position={[0, 1.8, 0]}>
+        <torusGeometry args={[0.1, 0.03, 8, 16]} />
+        <meshStandardMaterial color="#888888" metalness={0.8} />
+      </mesh>
+
+      {/* Swinging patient structure */}
+      <group ref={swingRef} position={[0, 1.5, 0]}>
+        {/* Main body - colored sphere representing patient status */}
+        <mesh onClick={() => onClick && onClick({ ...patient, selectedFlag: 'mdr' })}>
+          <sphereGeometry args={[0.4, 16, 16]} />
+          <meshStandardMaterial color={primaryColor} emissive={primaryColor} emissiveIntensity={isSelected ? 0.3 : 0.1} />
+        </mesh>
+
+        {/* Head */}
+        <mesh position={[0, 0.6, 0]}>
+          <sphereGeometry args={[0.2, 12, 12]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+
+        {/* Arms (simple lines) */}
+        <mesh position={[-0.3, 0.2, 0]} rotation={[0, 0, Math.PI / 6]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+        <mesh position={[0.3, 0.2, 0]} rotation={[0, 0, -Math.PI / 6]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+
+        {/* Legs (simple lines) */}
+        <mesh position={[-0.15, -0.4, 0]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+        <mesh position={[0.15, -0.4, 0]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+
+        {/* Status indicator rings around the body */}
+        <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.5, 0.03, 8, 16]} />
+          <meshStandardMaterial color={primaryColor} emissive={primaryColor} emissiveIntensity={0.2} />
+        </mesh>
+
+        {/* Patient name label */}
+        <Html position={[0, -1.2, 0]} center distanceFactor={20}>
+          <div className={`bg-white/90 px-2 py-1 rounded text-xs font-bold whitespace-nowrap shadow ${isSelected ? 'bg-blue-500 text-white' : ''}`}>
+            {patient.name}
+          </div>
+        </Html>
+
+        {/* MDR status badge */}
+        <Html position={[0, 1, 0]} center distanceFactor={15}>
+          <div className={`px-2 py-1 rounded-full text-xs font-bold text-white shadow-lg border-2 border-white`}
+               style={{ backgroundColor: primaryColor }}>
+            {patient.flags.mdr.status.replace('_', ' ').toUpperCase()}
+          </div>
+        </Html>
+      </group>
+
+      {/* Selection glow */}
+      {isSelected && (
+        <mesh>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshBasicMaterial color={primaryColor} transparent opacity={0.1} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 // ==================== MAIN COMPONENT ====================
 function RealTimeMap3D() {
-  const [patients, setPatients] = useState([]);
-  const [patientPositions, setPatientPositions] = useState({});
+  const [activeFloor, setActiveFloor] = useState(1); // Start on floor 1
+  const [mdrPatients, setMdrPatients] = useState([]);
+  const [mdrPositions, setMdrPositions] = useState({});
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [activeFloor, setActiveFloor] = useState(0);
-  const [isLive, setIsLive] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [stats, setStats] = useState({ total: 0, critical: 0, high: 0, medium: 0, low: 0 });
   const containerRef = useRef(null);
-  const socketRef = useRef(null);
-  const updateInterval = useRef(null);
 
   // Entry animation
   useEffect(() => {
@@ -275,81 +317,48 @@ function RealTimeMap3D() {
     }
   }, []);
 
-  // Socket connection
+  // Fetch MDR patients data
   useEffect(() => {
-    const socket = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
-    socket.on('connect', () => { setIsConnected(true); });
-    socket.on('disconnect', () => setIsConnected(false));
-    socket.on('gps:location-update', (data) => {
-      setPatientPositions(prev => ({
-        ...prev,
-        [data.deviceId]: {
-          x: (data.longitude - 77.21) * 30000,
-          y: HOSPITAL_FLOORS[activeFloor].y + 1,
-          z: (data.latitude - 28.567) * 30000
-        }
-      }));
-    });
-    socketRef.current = socket;
-    return () => socket.disconnect();
-  }, [activeFloor]);
-
-  // Fetch patients
-  useEffect(() => {
-    const fetchPatients = async () => {
+    const fetchMdrPatients = async () => {
       try {
-        const res = await api.get('/patients');
-        if (res.data?.ok && res.data.patients) {
-          setPatients(res.data.patients);
+        const response = await api.get('/patients/flags');
+        if (response.data?.ok && response.data.patients) {
+          const patients = response.data.patients;
+          setMdrPatients(patients);
+
+          // Position MDR patients hanging from ceiling across all floors
           const positions = {};
-          res.data.patients.forEach((p) => {
-            const floor = HOSPITAL_FLOORS[Math.floor(Math.random() * 4)];
-            const room = floor.rooms[Math.floor(Math.random() * floor.rooms.length)];
-            positions[p.uid] = {
-              x: room.x + (Math.random() - 0.5) * room.width * 0.6,
-              y: floor.y + 1,
-              z: room.z + (Math.random() - 0.5) * room.depth * 0.6
+          patients.forEach((patient, index) => {
+            // Distribute patients across all 3 floors
+            const floorIndex = index % 3;
+            const floorY = HOSPITAL_FLOORS[floorIndex].y;
+
+            // Position hanging from ceiling (ceiling is at floorY + 6)
+            const ceilingY = floorY + 6;
+
+            // Distribute around the perimeter of each floor
+            const angle = (index * 137.5) % 360; // Golden angle for even distribution
+            const radius = 15; // Distance from center
+            const x = Math.cos(angle * Math.PI / 180) * radius;
+            const z = Math.sin(angle * Math.PI / 180) * radius;
+
+            positions[patient.id] = {
+              x: x,
+              y: ceilingY - 1, // Hang 1 unit below ceiling
+              z: z,
+              floor: floorIndex,
+              flags: patient.flags
             };
           });
-          setPatientPositions(positions);
-          const newStats = { total: res.data.patients.length, critical: 0, high: 0, medium: 0, low: 0 };
-          res.data.patients.forEach(p => {
-            const risk = p.riskLevel || p.status || 'low';
-            if (risk === 'critical' || risk === 'red') newStats.critical++;
-            else if (risk === 'high' || risk === 'orange') newStats.high++;
-            else if (risk === 'medium' || risk === 'yellow') newStats.medium++;
-            else newStats.low++;
-          });
-          setStats(newStats);
+          setMdrPositions(positions);
         }
-      } catch (err) {
-        console.error('Failed to fetch patients:', err);
+      } catch (error) {
+        console.error('Failed to fetch MDR patients:', error);
       }
     };
-    fetchPatients();
-  }, []);
 
-  // Simulate movement
-  useEffect(() => {
-    if (isLive && patients.length > 0) {
-      updateInterval.current = setInterval(() => {
-        setPatientPositions(prev => {
-          const updated = { ...prev };
-          patients.forEach(p => {
-            if (updated[p.uid]) {
-              updated[p.uid] = {
-                ...updated[p.uid],
-                x: updated[p.uid].x + (Math.random() - 0.5) * 0.3,
-                z: updated[p.uid].z + (Math.random() - 0.5) * 0.3
-              };
-            }
-          });
-          return updated;
-        });
-      }, 100);
-    }
-    return () => { if (updateInterval.current) clearInterval(updateInterval.current); };
-  }, [isLive, patients]);
+    fetchMdrPatients();
+  }, []);
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -358,30 +367,20 @@ function RealTimeMap3D() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <span className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-xl">🏥</span>
-              3D Hospital Map
+              <span className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center text-xl">🏥</span>
+              Hanging MDR Patients
             </h1>
-            <p className="text-slate-400 text-sm mt-1">Real-time patient tracking</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${isConnected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-              <span className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
-              {isConnected ? 'Live' : 'Offline'}
-            </div>
-            <button onClick={() => setIsLive(!isLive)} className={`px-4 py-2 rounded-lg font-medium transition ${isLive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
-              {isLive ? '⏸ Pause' : '▶ Play'}
-            </button>
+            <p className="text-slate-400 text-sm mt-1">MDR patients hanging throughout hospital • All floors • Click patients for details</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="flex items-center gap-3 mt-3">
-          <div className="bg-slate-800/80 rounded-lg px-3 py-1.5 text-sm"><span className="text-slate-400">Total:</span><span className="text-white font-bold ml-1">{stats.total}</span></div>
-          <div className="bg-red-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-400">{stats.critical}</span></div>
-          <div className="bg-orange-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span><span className="text-orange-400">{stats.high}</span></div>
-          <div className="bg-yellow-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="text-yellow-400">{stats.medium}</span></div>
-          <div className="bg-green-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-green-400">{stats.low}</span></div>
+          <div className="bg-slate-800/80 rounded-lg px-3 py-1.5 text-sm"><span className="text-slate-400">Total Patients:</span><span className="text-white font-bold ml-1">{mdrPatients.length}</span></div>
+          <div className="bg-red-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-400">MDR: {mdrPatients.filter(p => p.flags.mdr.color === 'red').length}</span></div>
+          <div className="bg-orange-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span><span className="text-orange-400">Follow-up: {mdrPatients.filter(p => p.flags.mdr.color === 'orange').length}</span></div>
+          <div className="bg-yellow-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="text-yellow-400">At Risk: {mdrPatients.filter(p => p.flags.mdr.color === 'yellow').length}</span></div>
+          <div className="bg-green-500/20 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span><span className="text-green-400">Safe: {mdrPatients.filter(p => p.flags.mdr.color === 'green').length}</span></div>
         </div>
       </div>
 
@@ -406,11 +405,11 @@ function RealTimeMap3D() {
             {/* Elevator */}
             <Elevator position={[20, 10, 5]} />
 
-            {/* Patients */}
-            {patients.map((patient) => {
-              const pos = patientPositions[patient.uid];
+            {/* MDR Patients hanging from ceilings on all floors */}
+            {mdrPatients.map((patient) => {
+              const pos = mdrPositions[patient.id];
               if (!pos) return null;
-              return <PatientAvatar key={patient.uid} patient={patient} position={[pos.x, pos.y, pos.z]} isSelected={selectedPatient?.uid === patient.uid} onClick={() => setSelectedPatient(patient)} />;
+              return <HangingMDRPatient key={patient.id} patient={patient} position={pos} isSelected={selectedPatient?.id === patient.id} onClick={() => setSelectedPatient(patient)} />;
             })}
 
             <OrbitControls enableDamping dampingFactor={0.05} minDistance={10} maxDistance={80} maxPolarAngle={Math.PI / 2.1} />
@@ -429,32 +428,50 @@ function RealTimeMap3D() {
         </div>
       </div>
 
-      {/* Selected patient */}
+      {/* Selected MDR Patient */}
       {selectedPatient && (
-        <div className="absolute bottom-4 left-4 z-20 bg-slate-800/90 backdrop-blur rounded-xl p-4 w-72 shadow-2xl border border-slate-700">
+        <div className="absolute bottom-4 left-4 z-20 bg-slate-800/90 backdrop-blur rounded-xl p-4 w-80 shadow-2xl border border-slate-700">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-white">Patient Details</h3>
+            <h3 className="text-lg font-bold text-white">MDR Patient Details</h3>
             <button onClick={() => setSelectedPatient(null)} className="text-slate-400 hover:text-white text-xl">×</button>
           </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-slate-400">Name</span><span className="text-white font-medium">{selectedPatient.name}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">ID</span><span className="text-white">{selectedPatient.uid}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Risk</span><span className={`font-medium ${selectedPatient.riskLevel === 'critical' ? 'text-red-400' : selectedPatient.riskLevel === 'high' ? 'text-orange-400' : 'text-green-400'}`}>{selectedPatient.riskLevel || 'Low'}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Diagnosis</span><span className="text-white">{selectedPatient.diagnosis || 'N/A'}</span></div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-slate-400">Patient</span><span className="text-white font-medium">{selectedPatient.name}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">Age/Gender</span><span className="text-white">{selectedPatient.age}y, {selectedPatient.gender}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">Ward/Bed</span><span className="text-white">{selectedPatient.ward}/{selectedPatient.bedNumber}</span></div>
+
+            <div className="border-t border-slate-600 pt-3">
+              <p className="text-slate-400 text-xs mb-2 font-medium">MDR FLAGS {selectedPatient.selectedFlag && `(Selected: ${selectedPatient.selectedFlag.toUpperCase()})`}</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className={`text-center p-2 rounded-lg transition-all ${selectedPatient.selectedFlag === 'mdr' ? 'bg-slate-700 ring-2 ring-blue-400' : ''}`}>
+                  <div className={`w-4 h-4 rounded-full mx-auto mb-1 ${selectedPatient.flags.mdr.color === 'red' ? 'bg-red-500' : selectedPatient.flags.mdr.color === 'orange' ? 'bg-orange-500' : selectedPatient.flags.mdr.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <div className="text-xs text-slate-300">MDR</div>
+                  <div className="text-xs text-slate-400">{selectedPatient.flags.mdr.status.replace('_', ' ')}</div>
+                </div>
+                <div className={`text-center p-2 rounded-lg transition-all ${selectedPatient.selectedFlag === 'symptoms' ? 'bg-slate-700 ring-2 ring-blue-400' : ''}`}>
+                  <div className={`w-4 h-4 rounded-full mx-auto mb-1 ${selectedPatient.flags.symptoms.color === 'red' ? 'bg-red-500' : selectedPatient.flags.symptoms.color === 'orange' ? 'bg-orange-500' : selectedPatient.flags.symptoms.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <div className="text-xs text-slate-300">Symptoms</div>
+                  <div className="text-xs text-slate-400">{selectedPatient.flags.symptoms.status.replace('_', ' ')}</div>
+                </div>
+                <div className={`text-center p-2 rounded-lg transition-all ${selectedPatient.selectedFlag === 'fracture' ? 'bg-slate-700 ring-2 ring-blue-400' : ''}`}>
+                  <div className={`w-4 h-4 rounded-full mx-auto mb-1 ${selectedPatient.flags.fracture.color === 'red' ? 'bg-red-500' : selectedPatient.flags.fracture.color === 'orange' ? 'bg-orange-500' : selectedPatient.flags.fracture.color === 'yellow' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <div className="text-xs text-slate-300">Fracture</div>
+                  <div className="text-xs text-slate-400">{selectedPatient.flags.fracture.status.replace('_', ' ')}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Legend */}
+      {/* MDR Legend */}
       <div className="absolute bottom-4 right-4 z-20 bg-slate-800/80 backdrop-blur rounded-xl p-3">
-        <p className="text-slate-400 text-xs mb-2 font-medium">ROOM TYPES</p>
-        <div className="grid grid-cols-2 gap-1.5 text-xs">
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-red-500"></span><span className="text-slate-300">Emergency</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-orange-500"></span><span className="text-slate-300">ICU</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-purple-500"></span><span className="text-slate-300">Surgery</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-blue-500"></span><span className="text-slate-300">Lobby</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-green-500"></span><span className="text-slate-300">Pharmacy</span></div>
-          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-pink-500"></span><span className="text-slate-300">Station</span></div>
+        <p className="text-slate-400 text-xs mb-2 font-medium">MDR FLAG COLORS</p>
+        <div className="grid grid-cols-1 gap-1.5 text-xs">
+          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-red-500"></span><span className="text-slate-300">Red: MDR Disease</span></div>
+          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-orange-500"></span><span className="text-slate-300">Orange: Follow-ups</span></div>
+          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-yellow-500"></span><span className="text-slate-300">Yellow: At Risk</span></div>
+          <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-green-500"></span><span className="text-slate-300">Green: Safe/Discharge</span></div>
         </div>
       </div>
     </div>

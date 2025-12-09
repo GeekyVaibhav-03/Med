@@ -375,17 +375,8 @@ function NetworkGraph3D() {
       const contactsRes = await api.get('/contacts');
       const contacts = contactsRes.data?.contacts || [];
 
-      // Build nodes from patients
-      const patientNodes = patients.map(p => ({
-        id: p._id || p.uid,
-        name: p.name,
-        type: 'patient',
-        mdrStatus: p.mdrStatus || 'negative',
-        riskLevel: p.riskLevel || 'low',
-        diagnosis: p.diagnosis,
-        room: p.room,
-        admissionDate: p.admissionDate
-      }));
+      // Remove all patient nodes from the map
+      const patientNodes = [];
 
       // Add some simulated staff/visitor nodes for demo
       const additionalNodes = [
@@ -396,7 +387,7 @@ function NetworkGraph3D() {
         { id: 'equip-2', name: 'IV Pump 1', type: 'equipment', mdrStatus: 'negative', riskLevel: 'medium' },
       ];
 
-      const allNodes = [...patientNodes.slice(0, 15), ...additionalNodes]; // Limit for performance
+      const allNodes = [...patientNodes, ...additionalNodes]; // Only staff/equipment nodes
 
       // Build edges from contacts
       const contactEdges = contacts.slice(0, 30).map(c => ({

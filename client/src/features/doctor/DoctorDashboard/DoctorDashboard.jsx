@@ -100,11 +100,11 @@ const DoctorDashboard = () => {
       badge: stats.activeEquipment
     },
     {
-      title: 'MDR Checklist',
-      description: 'MDR screening checklist',
-      icon: 'ri-checkbox-multiple-line',
-      link: '/doctor/checklist',
-      color: 'from-green-500 to-green-600',
+      title: 'MDR Flags',
+      description: 'View patient MDR status flags',
+      icon: 'ri-flag-line',
+      link: '/doctor/mdr-flags',
+      color: 'from-red-500 to-red-600',
       badge: null
     }
   ];
