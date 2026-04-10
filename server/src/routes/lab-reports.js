@@ -8,14 +8,8 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
-// Try to use full service, fallback to mock if MySQL not available
-let labReportService;
-try {
-  labReportService = require('../services/labReportService');
-} catch (err) {
-  console.log('⚠️  Using lab report mock service (MySQL not available)');
-  labReportService = require('../services/labReportService.mock');
-}
+// Use the full lab report service
+const labReportService = require('../services/labReportService');
 
 // ============================================================================
 // VALIDATION RULES

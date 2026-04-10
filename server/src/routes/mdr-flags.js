@@ -7,13 +7,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 
-// Try to use full service, fallback to mock if MySQL not available
-let labReportService;
-try {
-  labReportService = require('../services/labReportService');
-} catch (err) {
-  labReportService = require('../services/labReportService.mock');
-}
+// Use the full lab report service
+const labReportService = require('../services/labReportService');
 
 // ==========================================================================
 // GET /api/patients/:id/mdr-status

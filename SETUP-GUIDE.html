@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedWatch Setup Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0E8B86 0%, #28B99A 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #0E8B86;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .alert {
+            background: #FFF3CD;
+            border-left: 4px solid #FFC107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .alert.success {
+            background: #D4EDDA;
+            border-left-color: #28A745;
+        }
+        .alert.info {
+            background: #D1ECF1;
+            border-left-color: #17A2B8;
+        }
+        .step {
+            background: #F8F9FA;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #0E8B86;
+        }
+        .step h2 {
+            color: #0E8B86;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            background: #0E8B86;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .code-block {
+            background: #2D2D2D;
+            color: #F8F8F2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .credentials {
+            background: linear-gradient(135deg, #0E8B86, #28B99A);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .credentials table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .credentials td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .credentials td:first-child {
+            font-weight: bold;
+            width: 150px;
+        }
+        .btn {
+            display: inline-block;
+            background: #0E8B86;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #28B99A;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .troubleshoot {
+            background: #FFF;
+            border: 2px solid #0E8B86;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .troubleshoot h3 {
+            color: #0E8B86;
+            margin-bottom: 10px;
+        }
+        ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        .highlight {
+            background: #FFFACD;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 MedWatch Setup Guide</h1>
+        <p class="subtitle">Complete Setup & Admin Account Creation</p>
+
+        <div class="alert info">
+            <strong>📌 Important:</strong> Follow these steps in order to set up your MedWatch application.
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="step">
+            <h2><span class="step-number">1</span> Create Admin Account</h2>
+            <p>Before you can access the admin panel, you need to create an admin account.</p>
+            
+            <h4 style="margin-top: 15px;">Method 1: Using Batch File (Easiest)</h4>
+            <p>Double-click on: <span class="highlight">setup-admin.bat</span> in your project folder</p>
+
+            <h4 style="margin-top: 15px;">Method 2: Using PowerShell</h4>
+            <div class="code-block">cd server<br>node quick-admin-setup.js</div>
+
+            <h4 style="margin-top: 15px;">Method 3: Manual Command</h4>
+            <div class="code-block">cd server<br>node create-admin.js</div>
+        </div>
+
+        <!-- DEFAULT CREDENTIALS -->
+        <div class="credentials">
+            <h3 style="margin-bottom: 15px;">🔑 Default Admin Credentials</h3>
+            <table>
+                <tr>
+                    <td>Username:</td>
+                    <td><strong>admin</strong></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><strong>admin123</strong></td>
+                </tr>
+                <tr>
+                    <td>Role:</td>
+                    <td><strong>Admin</strong></td>
+                </tr>
+                <tr>
+                    <td>Hospital:</td>
+                    <td><strong>MY Hospital</strong></td>
+                </tr>
+            </table>
+            <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
+                ⚠️ Change this password after your first login!
+            </p>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step">
+            <h2><span class="step-number">2</span> Start the Application</h2>
+            <p>Double-click on: <span class="highlight">start-app.bat</span> in your project folder</p>
+            <p style="margin-top: 10px;">This will automatically:</p>
+            <ul>
+                <li>✅ Start the Backend Server (Port 5000)</li>
+                <li>✅ Start the Frontend Dev Server (Port 4002)</li>
+                <li>✅ Open your browser to the application</li>
+            </ul>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step">
+            <h2><span class="step-number">3</span> Login to Admin Panel</h2>
+            <ol style="line-height: 2;">
+                <li>Go to: <a href="http://localhost:4002/login" target="_blank">http://localhost:4002/login</a></li>
+                <li>Click on the <strong>"Admin/Hospital"</strong> tab</li>
+                <li>Enter username: <strong>admin</strong></li>
+                <li>Enter password: <strong>admin123</strong></li>
+                <li>Click "Sign In"</li>
+            </ol>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="http://localhost:4002/login" class="btn" target="_blank">🚀 Open Login Page</a>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step">
+            <h2><span class="step-number">4</span> Create Additional Accounts</h2>
+            <p><strong>For Doctor/Nurse/Pharmacist accounts:</strong></p>
+            <ol style="line-height: 2; margin-top: 10px;">
+                <li>Go to: <a href="http://localhost:4002/signup" target="_blank">http://localhost:4002/signup</a></li>
+                <li>Fill in the registration form</li>
+                <li>Select role (Doctor, Nurse, or Pharmacist)</li>
+                <li>Select hospital from dropdown</li>
+                <li>Click "Create Account"</li>
+            </ol>
+
+            <div class="alert" style="margin-top: 15px;">
+                <strong>Note:</strong> Admin accounts CANNOT be created through the signup page for security reasons. Only the script above can create admin accounts.
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="http://localhost:4002/signup" class="btn" target="_blank">📝 Open Signup Page</a>
+            </div>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <div class="troubleshoot">
+            <h3>🔧 Troubleshooting</h3>
+            
+            <h4 style="margin: 15px 0 10px 0;">Problem: "Connection failed" or ports in use</h4>
+            <p><strong>Solution:</strong></p>
+            <div class="code-block" style="font-size: 12px;">
+# Kill processes on ports<br>
+Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess | Stop-Process -Force<br>
+Get-Process -Id (Get-NetTCPConnection -LocalPort 4002).OwningProcess | Stop-Process -Force
+            </div>
+
+            <h4 style="margin: 15px 0 10px 0;">Problem: MongoDB not running</h4>
+            <p><strong>Solution (PowerShell as Admin):</strong></p>
+            <div class="code-block">Start-Service MongoDB</div>
+
+            <h4 style="margin: 15px 0 10px 0;">Problem: Teal colors not showing</h4>
+            <p><strong>Solution:</strong> Press <kbd>Ctrl + Shift + R</kbd> to hard refresh browser</p>
+
+            <h4 style="margin: 15px 0 10px 0;">Problem: Invalid credentials</h4>
+            <p><strong>Solution:</strong> Run the admin creation script again to reset password</p>
+        </div>
+
+        <div class="alert success">
+            <strong>✅ Quick Links:</strong><br>
+            Frontend: <a href="http://localhost:4002" target="_blank">http://localhost:4002</a><br>
+            Backend API: <a href="http://localhost:5000" target="_blank">http://localhost:5000</a><br>
+            Login: <a href="http://localhost:4002/login" target="_blank">http://localhost:4002/login</a><br>
+            Signup: <a href="http://localhost:4002/signup" target="_blank">http://localhost:4002/signup</a>
+        </div>
+    </div>
+</body>
+</html>

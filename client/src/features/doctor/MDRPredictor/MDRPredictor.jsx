@@ -19,6 +19,7 @@ const MDRPredictor = () => {
   });
 
   const [prediction, setPrediction] = useState(null);
+  const [allPredictions, setAllPredictions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modelStats, setModelStats] = useState({
     trained: true,
@@ -99,7 +100,7 @@ const MDRPredictor = () => {
         2: { status: 'At Risk (Can have MDR)', color: 'yellow', risk: 'medium' }
       };
 
-      setPrediction({
+      const newPrediction = {
         uid: uuidv4(),
         prediction: predictionResult,
         category: categories[predictionResult],
@@ -115,8 +116,9 @@ const MDRPredictor = () => {
           `BP: ${formData.systolicBP} mmHg ${formData.systolicBP < 100 ? '(Abnormal)' : '(Normal)'}`,
           `Antibiotics: ${formData.antibioticUse} ${formData.antibioticUse === 'long_term' || formData.antibioticUse === 'multiple' ? '(Abnormal)' : '(Normal)'}`
         ]
-      });
-
+      };
+      setPrediction(newPrediction);
+      setAllPredictions(prev => [...prev, newPrediction]);
       setLoading(false);
     }, 2000);
   };
@@ -353,7 +355,6 @@ const MDRPredictor = () => {
                   {getCategoryIcon(prediction.category.status)}
                   Prediction Result
                 </h3>
-                <div className="text-xs text-gray-500 mt-1">UID: {prediction.uid.slice(0, 8)}</div>
               </div>
               <div className="p-6 pt-0">
                 <div className={`p-4 rounded-lg border-2 ${getCategoryColor(prediction.category.status)}`}>
@@ -375,6 +376,40 @@ const MDRPredictor = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* All Predictions Table (sorted by UID) */}
+          {allPredictions.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h3 className="text-xl font-semibold leading-none tracking-tight">All Predictions (Sorted by UID)</h3>
+              </div>
+              <div className="p-6 pt-0 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="px-3 py-2 text-left">UID</th>
+                      <th className="px-3 py-2 text-left">Status</th>
+                      <th className="px-3 py-2 text-left">Confidence</th>
+                      <th className="px-3 py-2 text-left">Risk Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allPredictions
+                      .slice()
+                      .sort((a, b) => a.uid.localeCompare(b.uid))
+                      .map((pred, idx) => (
+                        <tr key={pred.uid} className={idx % 2 === 0 ? '' : 'bg-gray-50'}>
+                          <td className="px-3 py-2 font-mono text-xs">{pred.uid.slice(0, 8)}</td>
+                          <td className="px-3 py-2">{pred.category.status}</td>
+                          <td className="px-3 py-2">{pred.confidence}%</td>
+                          <td className="px-3 py-2">{pred.riskScore}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

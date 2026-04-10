@@ -1,4 +1,75 @@
 import { useState, useEffect } from 'react';
+import { CheckCircle, AlertTriangle, Biohazard, UserCheck, User, Stethoscope, ArrowDown, ArrowUpLeft, UserPlus, UserCog, UserCircle2 } from 'lucide-react';
+// Timeline step component
+const TimelineStep = ({ icon, label, date, color, last, arrow, arrowColor }) => (
+  <div className="flex items-center gap-4 relative">
+    <div className="flex flex-col items-center">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${color} bg-white text-2xl`}>{icon}</div>
+      {!last && (
+        <>
+          {arrow === 'backtrace' ? (
+            <ArrowUpLeft className={`w-5 h-5 ${arrowColor || 'text-blue-400'} my-1`} />
+          ) : (
+            <ArrowDown className={`w-5 h-5 text-gray-400 my-1`} />
+          )}
+          <div className={`w-1 h-6 ${color} bg-opacity-60`}></div>
+        </>
+      )}
+    </div>
+    <div className="flex-1">
+      <div className="font-semibold text-gray-800">{label}</div>
+    </div>
+    <div className="text-gray-600 font-mono text-sm min-w-[90px]">{date}</div>
+  </div>
+);
+
+// Example backtrace steps (contacts/exposures before MDR confirmation)
+const backtraceSteps = [
+  {
+    icon: <User className="w-6 h-6" />, label: 'Contact: Patient #A', date: 'Nov 28', color: 'border-blue-300 text-blue-400', arrow: 'backtrace', arrowColor: 'text-blue-300',
+  },
+  {
+    icon: <User className="w-6 h-6" />, label: 'Contact: Patient #B', date: 'Nov 29', color: 'border-blue-300 text-blue-400', arrow: 'backtrace', arrowColor: 'text-blue-300',
+  },
+  {
+    icon: <User className="w-6 h-6" />, label: 'Contact: Patient #C', date: 'Nov 30', color: 'border-blue-300 text-blue-400', arrow: 'backtrace', arrowColor: 'text-blue-300',
+    last: true,
+  },
+];
+
+// Example timeline data (can be made dynamic)
+const exampleTimeline = [
+  {
+    icon: <Stethoscope className="w-6 h-6" />, label: 'Checkup', date: 'December 1', color: 'border-green-500 text-green-600',
+  },
+  {
+    icon: <AlertTriangle className="w-6 h-6" />, label: 'Risky Symptoms', date: 'December 1', color: 'border-yellow-500 text-yellow-600',
+  },
+  {
+    icon: <UserCheck className="w-6 h-6" />, label: 'Tested for MDRs', date: 'December 2', color: 'border-blue-500 text-blue-600',
+  },
+  {
+    icon: <Biohazard className="w-6 h-6" />, label: 'Detected, Directly Quarantined', date: 'December 4', color: 'border-red-500 text-red-600',
+  },
+  {
+    icon: <User className="w-6 h-6" />, label: 'Admitted', date: 'December 4', color: 'border-blue-500 text-blue-600',
+  },
+  // Contact points during stay
+  {
+    icon: <UserPlus className="w-6 h-6" />, label: 'Contact: Nurse Mary', date: 'December 5', color: 'border-purple-500 text-purple-600',
+  },
+  {
+    icon: <UserCog className="w-6 h-6" />, label: 'Contact: Dr. Smith', date: 'December 6', color: 'border-cyan-500 text-cyan-600',
+  },
+  {
+    icon: <UserCircle2 className="w-6 h-6" />, label: 'Contact: Staff John', date: 'December 7', color: 'border-orange-500 text-orange-600',
+  },
+  // End of stay
+  {
+    icon: <CheckCircle className="w-6 h-6" />, label: 'Reported Normal', date: 'December 24', color: 'border-green-500 text-green-600',
+    last: true,
+  },
+];
 import { motion } from 'framer-motion';
 import api from '../../../services/api';
 import Toast from '../../../components/Toast';
@@ -136,6 +207,28 @@ const LabReports = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Clinical Progression Timeline */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <i className="ri-timeline-event-line text-blue-500"></i>
+          Patient MDR Clinical Progression Timeline
+        </h2>
+        {/* Backtrace section */}
+        <div className="mb-2">
+          <div className="text-sm text-blue-500 font-semibold mb-1">Backtrace: Prior Contacts/Events</div>
+          <div className="space-y-0.5">
+            {backtraceSteps.map((step, idx) => (
+              <TimelineStep key={idx} {...step} last={step.last || idx === backtraceSteps.length - 1} />
+            ))}
+          </div>
+        </div>
+        {/* Main timeline */}
+        <div className="space-y-0.5 mt-2">
+          {exampleTimeline.map((step, idx) => (
+            <TimelineStep key={idx} {...step} last={step.last || idx === exampleTimeline.length - 1} />
+          ))}
+        </div>
+      </div>
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
       {/* Header */}
